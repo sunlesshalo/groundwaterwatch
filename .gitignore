@@ -5,6 +5,10 @@ pipeline/data/
 *.hdf
 *.hdf5
 
+# Per-week JSON intermediates — regenerable from NASA via pipeline.run.
+# We commit only the compiled timeseries.json + unl-latest.json.
+data/weekly_*.json
+
 # Python
 __pycache__/
 *.py[cod]

@@ -1,0 +1,55 @@
+---
+import Sparkline from "./Sparkline.astro";
+import { type Region, severityBand, bandLabel, lastNValues, consecutiveWeeksAtOrBelow } from "../lib/data";
+
+interface Props {
+  regions: Region[];
+  weeks: string[];
+  sparkWeeks?: number;
+}
+const { regions, weeks, sparkWeeks = 52 } = Astro.props;
+const latest = weeks[weeks.length - 1];
+
+const rows = regions.map((r) => {
+  const w = r.weeks[latest];
+  const pct = w?.mean_percentile ?? null;
+  const band = severityBand(pct);
+  const consecD3 = consecutiveWeeksAtOrBelow(r, weeks, 5);
+  const sparkValues = lastNValues(r, weeks, sparkWeeks);
+  return { r, pct, band, consecD3, sparkValues, validCells: w?.valid_cells ?? 0 };
+});
+---
+<table class="region-table">
+  <thead>
+    <tr>
+      <th>NUTS-2 region</th>
+      <th class="num">Mean pct</th>
+      <th>Band</th>
+      <th class="num">Wks ≤5%</th>
+      <th>Last {sparkWeeks} weeks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map(({ r, pct, band, consecD3, sparkValues, validCells }) => (
+      <tr>
+        <td>
+          <strong>{r.name}</strong>
+          <span style="color: var(--ink-soft); font-size: 0.78rem; margin-left: 0.4rem;">
+            {r.nuts_id}
+            {validCells <= 3 && <span title={`${validCells} valid 25 km cell${validCells === 1 ? "" : "s"} — low confidence`}> · low-N</span>}
+          </span>
+        </td>
+        <td class="num">{pct === null ? "—" : pct.toFixed(1)}</td>
+        <td>
+          {band === "normal" ? (
+            <span style="color: var(--ink-soft); font-size: 0.85rem;">{bandLabel(band)}</span>
+          ) : (
+            <span class={`band ${band}`}>{bandLabel(band)}</span>
+          )}
+        </td>
+        <td class="num">{consecD3 || ""}</td>
+        <td><Sparkline values={sparkValues} /></td>
+      </tr>
+    ))}
+  </tbody>
+</table>

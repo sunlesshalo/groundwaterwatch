@@ -1,0 +1,23 @@
+---
+interface Props {
+  values: number[];
+  width?: number;
+  height?: number;
+  color?: string;
+  threshold?: number;
+}
+const { values, width = 120, height = 28, color = "#b04a2c", threshold = 5 } = Astro.props;
+const len = values.length;
+const yOf = (v: number) => height - (Math.min(Math.max(v, 0), 100) / 100) * height;
+const xOf = (i: number) => (len <= 1 ? width / 2 : (i / (len - 1)) * width);
+const points = values.map((v, i) => `${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(" ");
+const yThreshold = yOf(threshold);
+const last = values[values.length - 1];
+const lastX = xOf(len - 1);
+const lastY = yOf(last);
+---
+<svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style="overflow: visible;">
+  <line x1="0" x2={width} y1={yThreshold} y2={yThreshold} stroke="#d4cdba" stroke-dasharray="2 3" stroke-width="0.5" />
+  <polyline fill="none" stroke={color} stroke-width="1.2" stroke-linejoin="round" points={points} />
+  <circle cx={lastX} cy={lastY} r="2" fill={color} />
+</svg>

@@ -1,5 +1,24 @@
 ---
 import Base from "../layouts/Base.astro";
+import RegionTable from "../components/RegionTable.astro";
+import { loadTimeseries, regionsForCountry, severityBand, consecutiveWeeksAtOrBelow } from "../lib/data";
+
+const ts = loadTimeseries();
+const regions = regionsForCountry("RO");
+const latest = ts.weeks[ts.weeks.length - 1];
+
+const inD4OrWorse = regions.filter((r) => {
+  const p = r.weeks[latest]?.mean_percentile;
+  return typeof p === "number" && p <= 2;
+}).length;
+const inD3OrWorse = regions.filter((r) => {
+  const p = r.weeks[latest]?.mean_percentile;
+  return typeof p === "number" && p <= 5;
+}).length;
+
+const longestD3Streak = Math.max(
+  ...regions.map((r) => consecutiveWeeksAtOrBelow(r, ts.weeks, 5))
+);
 ---
 <Base
   title="Romania — groundwaterwatch"
@@ -7,17 +26,20 @@ import Base from "../layouts/Base.astro";
 >
   <h1>Romania</h1>
   <p class="lede">
-    Eight NUTS-2 regions. The Banat / Crișana belt and the Carpathian rim
-    are sitting in the bottom 1–2% of the last 75 years. The Black Sea
-    coastal plain and southern Romania are merely "abnormally dry."
+    {inD4OrWorse} of 8 NUTS-2 regions sit at or below the 2nd percentile of
+    their 75-year baseline as of {latest}. {inD3OrWorse} of 8 are at or below
+    the 5th. The longest current streak below the 5th percentile across the
+    country is {longestD3Streak} consecutive weeks.
   </p>
-  <div class="callout">
-    Trend chart and choropleth wire up after the archive backfill completes.
-    For now, the latest week's NASA map is below.
-  </div>
 
-  <p>
-    <em>Placeholder — region table and choropleth will populate from
-    <code>data/timeseries.json</code> once the backfill finishes.</em>
+  <h2>Regions, latest week ({latest})</h2>
+  <RegionTable regions={regions} weeks={ts.weeks} />
+
+  <p style="font-size: 0.85rem; color: var(--ink-soft);">
+    "Wks ≤5%" counts the most recent uninterrupted run of weeks where the
+    region's area-weighted mean groundwater percentile sat at or below the
+    5th. The dashed line in the sparkline is at the 5th percentile.
+    București-Ilfov reads from only 3 of the 25 km grid cells, so its
+    numbers are flagged "low-N" — the value is directional, not authoritative.
   </p>
 </Base>
