@@ -1,0 +1,231 @@
+{
+  "week_start": "2026-01-26",
+  "source_file": "GRACEDADM_CLSM025GL_7D.A20260126.030.nc4",
+  "variable": "gws_inst",
+  "regions": [
+    {
+      "nuts_id": "HU11",
+      "country": "HU",
+      "name": "Budapest",
+      "mean_percentile": 0.4395604376260069,
+      "valid_cells": 1,
+      "bands": {
+        "d4_exceptional": 1.0,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU12",
+      "country": "HU",
+      "name": "Pest",
+      "mean_percentile": 1.0462994300978168,
+      "valid_cells": 13,
+      "bands": {
+        "d4_exceptional": 1.0,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU21",
+      "country": "HU",
+      "name": "K\u00f6z\u00e9p-Dun\u00e1nt\u00fal",
+      "mean_percentile": 0.7337513149387199,
+      "valid_cells": 21,
+      "bands": {
+        "d4_exceptional": 1.0,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU22",
+      "country": "HU",
+      "name": "Nyugat-Dun\u00e1nt\u00fal",
+      "mean_percentile": 1.1518853110834468,
+      "valid_cells": 21,
+      "bands": {
+        "d4_exceptional": 0.9527654646785636,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU23",
+      "country": "HU",
+      "name": "D\u00e9l-Dun\u00e1nt\u00fal",
+      "mean_percentile": 0.675657498937984,
+      "valid_cells": 26,
+      "bands": {
+        "d4_exceptional": 0.9615651151280593,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU31",
+      "country": "HU",
+      "name": "\u00c9szak-Magyarorsz\u00e1g",
+      "mean_percentile": 1.4740311830689108,
+      "valid_cells": 24,
+      "bands": {
+        "d4_exceptional": 0.8752273176176472,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU32",
+      "country": "HU",
+      "name": "\u00c9szak-Alf\u00f6ld",
+      "mean_percentile": 1.1819709506885585,
+      "valid_cells": 34,
+      "bands": {
+        "d4_exceptional": 0.9706124513539718,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "HU33",
+      "country": "HU",
+      "name": "D\u00e9l-Alf\u00f6ld",
+      "mean_percentile": 0.5691727660647993,
+      "valid_cells": 32,
+      "bands": {
+        "d4_exceptional": 0.968907752497038,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "RO11",
+      "country": "RO",
+      "name": "Nord-Vest",
+      "mean_percentile": 1.4113304731128682,
+      "valid_cells": 64,
+      "bands": {
+        "d4_exceptional": 0.905968393820505,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "RO12",
+      "country": "RO",
+      "name": "Centru",
+      "mean_percentile": 1.5963511507644768,
+      "valid_cells": 67,
+      "bands": {
+        "d4_exceptional": 0.9253143026556533,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "RO21",
+      "country": "RO",
+      "name": "Nord-Est",
+      "mean_percentile": 1.9353368732240377,
+      "valid_cells": 69,
+      "bands": {
+        "d4_exceptional": 0.754492914760395,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "RO22",
+      "country": "RO",
+      "name": "Sud-Est",
+      "mean_percentile": 24.350569402469326,
+      "valid_cells": 67,
+      "bands": {
+        "d4_exceptional": 0.07343422894146856,
+        "d3_extreme": 0.0881608988114906,
+        "d2_severe": 0.162387322781626,
+        "d1_moderate": 0.4742832290629056,
+        "d0_abnormally_dry": 0.6829573828667287
+      }
+    },
+    {
+      "nuts_id": "RO31",
+      "country": "RO",
+      "name": "Sud-Muntenia",
+      "mean_percentile": 22.358843318670452,
+      "valid_cells": 60,
+      "bands": {
+        "d4_exceptional": 0.16469869768666592,
+        "d3_extreme": 0.21433291388343437,
+        "d2_severe": 0.26403937934277133,
+        "d1_moderate": 0.31403260883545847,
+        "d0_abnormally_dry": 0.7151265727584798
+      }
+    },
+    {
+      "nuts_id": "RO32",
+      "country": "RO",
+      "name": "Bucure\u015fti-Ilfov",
+      "mean_percentile": 22.47651929149464,
+      "valid_cells": 3,
+      "bands": {
+        "d4_exceptional": 0.0,
+        "d3_extreme": 0.0,
+        "d2_severe": 0.0,
+        "d1_moderate": 0.0,
+        "d0_abnormally_dry": 1.0
+      }
+    },
+    {
+      "nuts_id": "RO41",
+      "country": "RO",
+      "name": "Sud-Vest Oltenia",
+      "mean_percentile": 11.729693909546699,
+      "valid_cells": 53,
+      "bands": {
+        "d4_exceptional": 0.14914417904061056,
+        "d3_extreme": 0.3178722002049439,
+        "d2_severe": 0.5251892659841669,
+        "d1_moderate": 0.8283597136604461,
+        "d0_abnormally_dry": 0.9618220325970654
+      }
+    },
+    {
+      "nuts_id": "RO42",
+      "country": "RO",
+      "name": "Vest",
+      "mean_percentile": 1.0741213265705483,
+      "valid_cells": 61,
+      "bands": {
+        "d4_exceptional": 0.9666382574264238,
+        "d3_extreme": 1.0,
+        "d2_severe": 1.0,
+        "d1_moderate": 1.0,
+        "d0_abnormally_dry": 1.0
+      }
+    }
+  ]
+}

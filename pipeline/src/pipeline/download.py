@@ -7,6 +7,7 @@ register at https://urs.earthdata.nasa.gov/users/new and authorize the
 
 from __future__ import annotations
 
+import netrc
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
@@ -18,11 +19,34 @@ EARTHDATA_HOST = "urs.earthdata.nasa.gov"
 
 
 class EarthdataSession(requests.Session):
-    """Preserve Authorization header across the GES DISC -> URS -> GES DISC redirect chain.
+    """Carry Basic auth across the GES DISC -> URS -> GES DISC redirect chain.
 
     NASA-recommended pattern; documented at
     https://urs.earthdata.nasa.gov/documentation/for_users/data_access/python.
+
+    requests does not auto-apply .netrc credentials across cross-host redirects,
+    so we read ~/.netrc once at construction and bind the credential to the
+    session. rebuild_auth then strips it only when redirecting to a third-party
+    host that is neither the data host nor URS.
     """
+
+    def __init__(self):
+        super().__init__()
+        try:
+            entry = netrc.netrc().authenticators(EARTHDATA_HOST)
+        except (FileNotFoundError, netrc.NetrcParseError) as e:
+            raise RuntimeError(
+                f"~/.netrc missing or unparseable. Add a line:\n"
+                f"  machine {EARTHDATA_HOST} login <uid> password <pw>\n"
+                f"and chmod 600 ~/.netrc. Original error: {e}"
+            )
+        if not entry:
+            raise RuntimeError(
+                f"No ~/.netrc entry for {EARTHDATA_HOST}. Add a line:\n"
+                f"  machine {EARTHDATA_HOST} login <uid> password <pw>"
+            )
+        login, _, password = entry
+        self.auth = (login, password)
 
     def rebuild_auth(self, prepared_request, response):
         headers = prepared_request.headers
