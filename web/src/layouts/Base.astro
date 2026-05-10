@@ -1,0 +1,44 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description = "Europe's hidden drought, mapped weekly. NASA GRACE-FO groundwater data for Romania and Hungary at NUTS-2 resolution." } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/" class="brand">groundwaterwatch</a>
+      <nav>
+        <a href="/ro/">Romania</a>
+        <a href="/hu/">Hungary</a>
+        <a href="/methodology/">Methodology</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>
+        Data: NASA GRACE-FO Data Assimilation
+        (<a href="https://disc.gsfc.nasa.gov/datasets/GRACEDADM_CLSM025GL_7D_3.0/summary">GRACEDADM_CLSM025GL_7D V3.0</a>)
+        and operational maps from <a href="https://nasagrace.unl.edu/">NASA GRACE / NDMC</a>.
+        Boundaries: <a href="https://gisco-services.ec.europa.eu/distribution/v2/nuts/">Eurostat NUTS 2021 (1:1M)</a>.
+        Code: <a href="https://github.com/sunlesshalo/groundwaterwatch">github.com/sunlesshalo/groundwaterwatch</a>.
+      </p>
+    </footer>
+  </body>
+</html>

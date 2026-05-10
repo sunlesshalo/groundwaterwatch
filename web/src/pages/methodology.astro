@@ -1,0 +1,76 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base title="Methodology — groundwaterwatch">
+  <h1>Methodology</h1>
+  <p class="lede">
+    Two data products. Public domain. Aggregated to NUTS-2 regions. We
+    document everything here because awareness work without methodology
+    isn't journalism, it's vibes.
+  </p>
+
+  <h2>Current week (this week's map)</h2>
+  <p>
+    The current map is mirrored directly from
+    <a href="https://nasagrace.unl.edu/">nasagrace.unl.edu</a>, which is
+    NASA Goddard's operational percentile visualization run in partnership
+    with the National Drought Mitigation Center. Latency: 2–9 days.
+  </p>
+  <p>
+    This is NASA's official operational product. We do not modify it, we
+    only mirror it for stable hosting.
+  </p>
+
+  <h2>Multi-year trend (the chart)</h2>
+  <p>
+    The trend chart is our independent zonal aggregation of the
+    <a href="https://disc.gsfc.nasa.gov/datasets/GRACEDADM_CLSM025GL_7D_3.0/summary">
+      GRACEDADM_CLSM025GL_7D V3.0
+    </a> final-archive product from NASA GES DISC. Weekly cadence, 0.25°
+    (~25 km) resolution, NetCDF format, NASA public domain. Coverage
+    February 2003 → present, with a 3–6 month archive latency.
+  </p>
+  <p>
+    The percentile is pre-computed by NASA against the 1948–2014 baseline.
+    We aggregate the per-cell values to NUTS-2 polygons (Eurostat 2021
+    boundaries, 1:1M scale) using cosine-of-latitude area weighting, then
+    compute the share of polygon area that falls into each U.S. Drought
+    Monitor severity band (D4 ≤ 2nd percentile, D3 ≤ 5th, D2 ≤ 10th,
+    D1 ≤ 20th, D0 ≤ 30th).
+  </p>
+
+  <h2>Resolution floor</h2>
+  <p>
+    The native 0.25° grid corresponds to ~25 km cells. Romania has ~380
+    cells; Hungary ~150. <strong>NUTS-2</strong> is the smallest geography
+    we report. NUTS-3 (counties / județe / megyék) is too coarse for a 25 km
+    grid to characterize defensibly. Some NUTS-2 regions are themselves
+    very small: Budapest (HU11) gets only one valid cell, București-Ilfov
+    (RO32) gets three. Those numbers are flagged with a low-confidence
+    indicator in the per-country tables.
+  </p>
+
+  <h2>What this dashboard does <em>not</em> measure</h2>
+  <ul>
+    <li>
+      Individual wells. The product is a modeled aquifer-storage anomaly,
+      not a well registry.
+    </li>
+    <li>Drinking-water quality, salinity, or contamination.</li>
+    <li>Surface water — rivers, lakes, reservoirs. Those are separate products.</li>
+    <li>
+      Sub-NUTS-2 detail. Do not interpret a single 25 km cell as
+      authoritative for any specific village or city block within it.
+    </li>
+    <li>
+      Real-time conditions. The mission cadence is weekly at best.
+    </li>
+  </ul>
+
+  <h2>Source code & licenses</h2>
+  <p>
+    Pipeline and frontend are MIT-licensed at
+    <a href="https://github.com/sunlesshalo/groundwaterwatch">github.com/sunlesshalo/groundwaterwatch</a>.
+    NASA data is public domain. Eurostat boundaries are CC-BY 4.0.
+  </p>
+</Base>

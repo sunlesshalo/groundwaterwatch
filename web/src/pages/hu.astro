@@ -1,0 +1,24 @@
+---
+import Base from "../layouts/Base.astro";
+---
+<Base
+  title="Hungary — groundwaterwatch"
+  description="Hungary's groundwater status by NUTS-2 region, updated weekly from NASA GRACE-FO data."
+>
+  <h1>Hungary</h1>
+  <p class="lede">
+    Eight NUTS-2 regions. As of the 2026-01-26 archive snapshot, all eight
+    are in the bottom 1.5 percentile of the last 75 years. Between 88% and
+    100% of the country's area is in the U.S. Drought Monitor's "D4
+    exceptional" category.
+  </p>
+  <div class="callout">
+    Trend chart and choropleth wire up after the archive backfill completes.
+    For now, the latest week's NASA map is below.
+  </div>
+
+  <p>
+    <em>Placeholder — region table and choropleth will populate from
+    <code>data/timeseries.json</code> once the backfill finishes.</em>
+  </p>
+</Base>
