@@ -1,0 +1,22 @@
+[project]
+name = "groundwaterwatch-pipeline"
+version = "0.1.0"
+description = "Ingest NASA GRACE-FO data assimilation NetCDF and emit per-region JSON time series"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.32",
+    "xarray>=2024.10",
+    "netcdf4>=1.7",
+    "numpy>=2.0",
+    "geopandas>=1.0",
+    "shapely>=2.0",
+    "regionmask>=0.12",
+    "pyogrio>=0.9",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
