@@ -41,21 +41,14 @@ export interface MapData extends MapView {
   countries: Record<"RO" | "HU", MapView>;
 }
 
-let cached: Timeseries | null = null;
-let cachedMap: MapData | null = null;
-
 export function loadMap(): MapData {
-  if (cachedMap) return cachedMap;
   const raw = fs.readFileSync(path.join(REPO_DATA, "svg-ro-hu.json"), "utf8");
-  cachedMap = JSON.parse(raw) as MapData;
-  return cachedMap;
+  return JSON.parse(raw) as MapData;
 }
 
 export function loadTimeseries(): Timeseries {
-  if (cached) return cached;
   const raw = fs.readFileSync(path.join(REPO_DATA, "timeseries.json"), "utf8");
-  cached = JSON.parse(raw) as Timeseries;
-  return cached;
+  return JSON.parse(raw) as Timeseries;
 }
 
 export function regionsForCountry(country: "RO" | "HU"): Region[] {
