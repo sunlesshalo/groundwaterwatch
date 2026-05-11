@@ -15,6 +15,7 @@ change if we ever want pixel-perfect cartographic accuracy.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from shapely.geometry import MultiPolygon, Polygon
@@ -29,31 +30,39 @@ VIEWBOX_PADDING_DEG = 0.3
 TARGET_WIDTH = 1000
 
 
-def project_polygon(poly: Polygon, west: float, north: float, scale: float) -> str:
+def project_polygon(poly: Polygon, west: float, north: float, scale: float, lon_scale: float) -> str:
     parts = []
     for ring_idx, ring in enumerate([poly.exterior, *poly.interiors]):
         coords = list(ring.coords)
-        pts = [f"{(x - west) * scale:.2f},{(north - y) * scale:.2f}" for x, y in coords]
+        pts = [f"{(x - west) * lon_scale * scale:.2f},{(north - y) * scale:.2f}" for x, y in coords]
         cmd_letter = "M" if ring_idx == 0 else "M"
         parts.append(f"{cmd_letter}{pts[0]} L{' L'.join(pts[1:])} Z")
     return " ".join(parts)
 
 
-def project_geometry(geom, west: float, north: float, scale: float) -> str:
+def project_geometry(geom, west: float, north: float, scale: float, lon_scale: float) -> str:
     if isinstance(geom, Polygon):
-        return project_polygon(geom, west, north, scale)
+        return project_polygon(geom, west, north, scale, lon_scale)
     if isinstance(geom, MultiPolygon):
-        return " ".join(project_polygon(p, west, north, scale) for p in geom.geoms)
+        return " ".join(project_polygon(p, west, north, scale, lon_scale) for p in geom.geoms)
     raise TypeError(f"Unsupported geometry type: {type(geom)}")
 
 
 def compute_view(bounds, target_width=TARGET_WIDTH, padding=VIEWBOX_PADDING_DEG):
+    """Equirectangular projection with cos(lat) longitude correction so the
+    map preserves visual proportions at the mid-latitude standard parallel.
+    Sufficient for RO+HU (~5-degree N-S extent). Switch to Albers if/when
+    we expand beyond ~10 degrees of latitude.
+    """
     minx, miny, maxx, maxy = bounds
     west = minx - padding
     east = maxx + padding
     south = miny - padding
     north = maxy + padding
-    scale = target_width / (east - west)
+    mid_lat = (south + north) / 2
+    lon_scale = math.cos(math.radians(mid_lat))
+    width_units = (east - west) * lon_scale
+    scale = target_width / width_units
     height = (north - south) * scale
     return {
         "viewBox": f"0 0 {target_width:.0f} {height:.0f}",
@@ -61,6 +70,7 @@ def compute_view(bounds, target_width=TARGET_WIDTH, padding=VIEWBOX_PADDING_DEG)
         "west": west,
         "north": north,
         "scale": scale,
+        "lon_scale": lon_scale,
     }
 
 
@@ -69,10 +79,12 @@ def project_set(gdf, view):
     centroids = {}
     for _, row in gdf.iterrows():
         nuts_id = row["NUTS_ID"]
-        paths[nuts_id] = project_geometry(row["geometry"], view["west"], view["north"], view["scale"])
+        paths[nuts_id] = project_geometry(
+            row["geometry"], view["west"], view["north"], view["scale"], view["lon_scale"]
+        )
         c = row["geometry"].representative_point()
         centroids[nuts_id] = {
-            "x": round((c.x - view["west"]) * view["scale"], 1),
+            "x": round((c.x - view["west"]) * view["lon_scale"] * view["scale"], 1),
             "y": round((view["north"] - c.y) * view["scale"], 1),
         }
     return paths, centroids
