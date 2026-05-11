@@ -30,7 +30,22 @@ export interface Timeseries {
   regions: Region[];
 }
 
+export interface MapData {
+  viewBox: string;
+  bbox: [number, number, number, number];
+  paths: Record<string, string>;
+  centroids: Record<string, { x: number; y: number }>;
+}
+
 let cached: Timeseries | null = null;
+let cachedMap: MapData | null = null;
+
+export function loadMap(): MapData {
+  if (cachedMap) return cachedMap;
+  const raw = fs.readFileSync(path.join(REPO_DATA, "svg-ro-hu.json"), "utf8");
+  cachedMap = JSON.parse(raw) as MapData;
+  return cachedMap;
+}
 
 export function loadTimeseries(): Timeseries {
   if (cached) return cached;
@@ -46,6 +61,17 @@ export function regionsForCountry(country: "RO" | "HU"): Region[] {
 export function latestWeek(): string {
   const ts = loadTimeseries();
   return ts.weeks[ts.weeks.length - 1];
+}
+
+export function bandColor(band: string): string {
+  return {
+    d4: "#6e1f1f",
+    d3: "#b04a2c",
+    d2: "#d28f3a",
+    d1: "#e0c068",
+    d0: "#a8aa6c",
+    normal: "#6a8e6f",
+  }[band] || "#cccccc";
 }
 
 export function severityBand(p: number | null): "d4" | "d3" | "d2" | "d1" | "d0" | "normal" {

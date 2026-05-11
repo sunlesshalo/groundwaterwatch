@@ -1,39 +1,81 @@
 ---
 import Base from "../layouts/Base.astro";
+import RegionMap from "../components/RegionMap.astro";
+import { loadTimeseries, regionsForCountry, consecutiveWeeksAtOrBelow } from "../lib/data";
+
+const ts = loadTimeseries();
+const latest = ts.weeks[ts.weeks.length - 1];
+const allRegions = ts.regions;
+
+const huInD4 = regionsForCountry("HU").filter((r) => {
+  const p = r.weeks[latest]?.mean_percentile;
+  return typeof p === "number" && p <= 2;
+}).length;
+const roInD4 = regionsForCountry("RO").filter((r) => {
+  const p = r.weeks[latest]?.mean_percentile;
+  return typeof p === "number" && p <= 2;
+}).length;
+const longestStreak = Math.max(
+  ...allRegions.map((r) => consecutiveWeeksAtOrBelow(r, ts.weeks, 5))
+);
+const longestStreakRegion = allRegions.reduce((best, r) => {
+  const s = consecutiveWeeksAtOrBelow(r, ts.weeks, 5);
+  return s > consecutiveWeeksAtOrBelow(best, ts.weeks, 5) ? r : best;
+}, allRegions[0]);
 ---
 <Base title="groundwaterwatch — Europe's hidden drought, mapped weekly">
   <h1>Europe's hidden drought</h1>
   <p class="lede">
-    NASA's GRACE-FO satellites have been measuring how much water sits beneath
-    Europe's surface for 23 years. The picture they paint of Romania and
-    Hungary right now is the driest it has ever been at this time of year —
-    drier than 98% of weeks in the last three quarters of a century.
+    NASA's GRACE-FO satellites have measured how much water sits beneath
+    Europe's surface every week for 23 years. The picture they paint of
+    Hungary and Romania right now is the driest it has ever been at this
+    time of year — drier than 98% of weeks in the last three quarters of
+    a century.
   </p>
+
+  <h2>NUTS-2 regions, week of {latest}</h2>
+  <RegionMap regions={allRegions} />
 
   <p>
-    This is a public dashboard, updated weekly. We pull the same data NASA
-    publishes and break it down by NUTS-2 region so you can see where the
-    aquifer collapse is sharpest. v1 covers Romania and Hungary. Other
-    countries follow.
+    <strong>Hungary:</strong> {huInD4} of 8 regions sit at or below the 2nd
+    percentile of their 75-year baseline.
+    <strong>Romania:</strong> {roInD4} of 8 regions are equally depleted
+    (the western and northern flank).
+    <strong>{longestStreakRegion.name}</strong> ({longestStreakRegion.country})
+    has been below the 5th percentile for <strong>{longestStreak} consecutive weeks</strong>.
   </p>
 
-  <h2>Pick a country</h2>
+  <h2>NASA's official operational map (Europe)</h2>
+  <p style="margin-bottom: 0.6rem;">
+    For the current week, here is NASA Goddard's official global groundwater
+    percentile visualization, mirrored from
+    <a href="https://nasagrace.unl.edu/">nasagrace.unl.edu</a>. Operational
+    latency is 2–9 days.
+  </p>
+  <p>
+    <img
+      src="/maps/2026-05-04/gws.png"
+      alt="NASA GRACE-FO groundwater storage percentile map, week of 2026-05-04"
+      style="max-width: 100%; height: auto; border: 1px solid var(--line);"
+    />
+  </p>
+
+  <h2>Per-country pages</h2>
   <ul>
-    <li><a href="/ro/">Romania</a> — 8 NUTS-2 regions</li>
-    <li><a href="/hu/">Hungary</a> — 8 NUTS-2 regions</li>
+    <li><a href="/ro/">Romania</a> — 8 NUTS-2 regions, full 23-year trend</li>
+    <li><a href="/hu/">Hungary</a> — 8 NUTS-2 regions, full 23-year trend</li>
   </ul>
 
   <h2>How to read the percentile</h2>
   <p>
-    Every cell on the map and every region table reports a
-    <strong>groundwater percentile</strong> against a 75-year baseline
-    (1948–2014). A value of 2 means: only in 2% of historical weeks at this
-    time of year was the water table this depleted or worse.
+    Every region's score is a <strong>groundwater percentile</strong> against
+    a 75-year baseline (1948–2014). A value of 2 means: only in 2% of historical
+    weeks at this time of year was the water table this depleted or worse.
   </p>
 
   <div class="callout">
-    Methodology, source data, and what this dashboard does <em>not</em> measure
-    are documented on the <a href="/methodology/">methodology page</a>. Please
-    read it before quoting the numbers.
+    Methodology, sources, and what this dashboard does <em>not</em> measure
+    are on the <a href="/methodology/">methodology page</a>. Please read it
+    before quoting the numbers.
   </div>
 </Base>

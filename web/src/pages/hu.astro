@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import RegionTable from "../components/RegionTable.astro";
+import RegionMap from "../components/RegionMap.astro";
 import { loadTimeseries, regionsForCountry, consecutiveWeeksAtOrBelow } from "../lib/data";
 
 const ts = loadTimeseries();
@@ -31,6 +32,9 @@ const longestD3Streak = Math.max(
     the 5th. The longest current streak below the 5th percentile across the
     country is {longestD3Streak} consecutive weeks.
   </p>
+
+  <h2>Map, week of {latest}</h2>
+  <RegionMap regions={regions} week={latest} highlightCountry="HU" />
 
   <h2>Regions, latest week ({latest})</h2>
   <RegionTable regions={regions} weeks={ts.weeks} />

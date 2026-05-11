@@ -1,0 +1,143 @@
+---
+import { loadMap, loadTimeseries, severityBand, bandColor, bandLabel } from "../lib/data";
+import type { Region } from "../lib/data";
+
+interface Props {
+  regions: Region[];
+  week?: string;
+  showLabels?: boolean;
+  highlightCountry?: "RO" | "HU" | "ALL";
+}
+const { regions, week, showLabels = true, highlightCountry = "ALL" } = Astro.props;
+
+const ts = loadTimeseries();
+const w = week ?? ts.weeks[ts.weeks.length - 1];
+const mapData = loadMap();
+
+interface FeatureFill {
+  nuts_id: string;
+  name: string;
+  country: string;
+  pct: number | null;
+  band: string;
+  path: string;
+  centroid: { x: number; y: number } | undefined;
+  dimmed: boolean;
+}
+
+const allRegions = ts.regions;
+const features: FeatureFill[] = allRegions.map((r) => {
+  const pct = r.weeks[w]?.mean_percentile ?? null;
+  const band = severityBand(pct);
+  return {
+    nuts_id: r.nuts_id,
+    name: r.name,
+    country: r.country,
+    pct,
+    band,
+    path: mapData.paths[r.nuts_id] || "",
+    centroid: mapData.centroids[r.nuts_id],
+    dimmed: highlightCountry !== "ALL" && r.country !== highlightCountry,
+  };
+});
+
+const visibleIds = new Set(regions.map((r) => r.nuts_id));
+const bands = ["d4", "d3", "d2", "d1", "d0", "normal"] as const;
+const bandRanges: Record<string, string> = {
+  d4: "≤ 2",
+  d3: "≤ 5",
+  d2: "≤ 10",
+  d1: "≤ 20",
+  d0: "≤ 30",
+  normal: "> 30",
+};
+---
+<figure class="region-map">
+  <svg viewBox={mapData.viewBox} role="img" aria-label={`Groundwater percentile choropleth for week of ${w}`}>
+    {features.map((f) => (
+      <path
+        d={f.path}
+        fill={f.pct === null ? "#e7e1d3" : bandColor(f.band)}
+        fill-opacity={f.dimmed ? 0.25 : 1}
+        stroke="#fff"
+        stroke-width="1"
+      >
+        <title>{f.name} ({f.nuts_id}) — {f.pct === null ? "no data" : `${f.pct.toFixed(1)} pct`} · {bandLabel(f.band)}</title>
+      </path>
+    ))}
+    {showLabels && features.filter(f => visibleIds.has(f.nuts_id) && f.centroid).map((f) => (
+      <text
+        x={f.centroid!.x}
+        y={f.centroid!.y}
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-size="11"
+        font-family="ui-sans-serif, system-ui, sans-serif"
+        font-weight="600"
+        fill={["d4", "d3"].includes(f.band) ? "#fff" : "#0c1a14"}
+        stroke={["d4", "d3"].includes(f.band) ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.6)"}
+        stroke-width="0.4"
+        paint-order="stroke"
+      >
+        {f.nuts_id}
+      </text>
+    ))}
+  </svg>
+  <figcaption>
+    <span class="legend">
+      {bands.map((b) => (
+        <span class="legend-item">
+          <span class="swatch" style={`background:${bandColor(b)};`}></span>
+          <span class="legend-label">
+            {bandLabel(b)} <em>({bandRanges[b]})</em>
+          </span>
+        </span>
+      ))}
+    </span>
+    <span class="caption-source">Week of {w}. NUTS-2 (Eurostat 2021).</span>
+  </figcaption>
+</figure>
+
+<style>
+  .region-map {
+    margin: 1.2rem 0 1.6rem;
+  }
+  .region-map svg {
+    width: 100%;
+    height: auto;
+    background: #f0ebde;
+    border: 1px solid var(--line);
+    display: block;
+  }
+  .region-map figcaption {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    margin-bottom: 0.3rem;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .swatch {
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .legend-label em {
+    color: var(--ink-soft);
+    font-style: normal;
+    font-feature-settings: "tnum";
+  }
+  .caption-source {
+    display: block;
+  }
+</style>
