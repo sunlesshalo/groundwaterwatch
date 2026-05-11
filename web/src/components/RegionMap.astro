@@ -1,47 +1,51 @@
 ---
 import { loadMap, loadTimeseries, severityBand, bandColor, bandLabel } from "../lib/data";
-import type { Region } from "../lib/data";
+import type { Region, MapView } from "../lib/data";
 
 interface Props {
   regions: Region[];
   week?: string;
   showLabels?: boolean;
-  highlightCountry?: "RO" | "HU" | "ALL";
+  focus?: "RO" | "HU" | "ALL";
 }
-const { regions, week, showLabels = true, highlightCountry = "ALL" } = Astro.props;
+const { regions, week, showLabels = true, focus = "ALL" } = Astro.props;
 
 const ts = loadTimeseries();
 const w = week ?? ts.weeks[ts.weeks.length - 1];
 const mapData = loadMap();
 
-interface FeatureFill {
+const view: MapView = focus === "ALL"
+  ? mapData
+  : mapData.countries[focus];
+
+const visibleRegions = focus === "ALL"
+  ? ts.regions
+  : ts.regions.filter((r) => r.country === focus);
+
+interface Feature {
   nuts_id: string;
   name: string;
-  country: string;
   pct: number | null;
   band: string;
   path: string;
   centroid: { x: number; y: number } | undefined;
-  dimmed: boolean;
 }
 
-const allRegions = ts.regions;
-const features: FeatureFill[] = allRegions.map((r) => {
-  const pct = r.weeks[w]?.mean_percentile ?? null;
-  const band = severityBand(pct);
-  return {
-    nuts_id: r.nuts_id,
-    name: r.name,
-    country: r.country,
-    pct,
-    band,
-    path: mapData.paths[r.nuts_id] || "",
-    centroid: mapData.centroids[r.nuts_id],
-    dimmed: highlightCountry !== "ALL" && r.country !== highlightCountry,
-  };
-});
+const features: Feature[] = visibleRegions
+  .filter((r) => view.paths[r.nuts_id])
+  .map((r) => {
+    const pct = r.weeks[w]?.mean_percentile ?? null;
+    return {
+      nuts_id: r.nuts_id,
+      name: r.name,
+      pct,
+      band: severityBand(pct),
+      path: view.paths[r.nuts_id],
+      centroid: view.centroids[r.nuts_id],
+    };
+  });
 
-const visibleIds = new Set(regions.map((r) => r.nuts_id));
+const tableIds = new Set(regions.map((r) => r.nuts_id));
 const bands = ["d4", "d3", "d2", "d1", "d0", "normal"] as const;
 const bandRanges: Record<string, string> = {
   d4: "≤ 2",
@@ -53,19 +57,18 @@ const bandRanges: Record<string, string> = {
 };
 ---
 <figure class="region-map">
-  <svg viewBox={mapData.viewBox} role="img" aria-label={`Groundwater percentile choropleth for week of ${w}`}>
+  <svg viewBox={view.viewBox} role="img" aria-label={`Groundwater percentile choropleth for week of ${w}`}>
     {features.map((f) => (
       <path
         d={f.path}
         fill={f.pct === null ? "#e7e1d3" : bandColor(f.band)}
-        fill-opacity={f.dimmed ? 0.25 : 1}
         stroke="#fff"
         stroke-width="1"
       >
         <title>{f.name} ({f.nuts_id}) — {f.pct === null ? "no data" : `${f.pct.toFixed(1)} pct`} · {bandLabel(f.band)}</title>
       </path>
     ))}
-    {showLabels && features.filter(f => visibleIds.has(f.nuts_id) && f.centroid).map((f) => (
+    {showLabels && features.filter((f) => tableIds.has(f.nuts_id) && f.centroid).map((f) => (
       <text
         x={f.centroid!.x}
         y={f.centroid!.y}
@@ -99,9 +102,7 @@ const bandRanges: Record<string, string> = {
 </figure>
 
 <style>
-  .region-map {
-    margin: 1.2rem 0 1.6rem;
-  }
+  .region-map { margin: 1.2rem 0 1.6rem; }
   .region-map svg {
     width: 100%;
     height: auto;
@@ -120,11 +121,7 @@ const bandRanges: Record<string, string> = {
     gap: 0.6rem 1rem;
     margin-bottom: 0.3rem;
   }
-  .legend-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
+  .legend-item { display: inline-flex; align-items: center; gap: 0.35rem; }
   .swatch {
     display: inline-block;
     width: 0.8rem;
@@ -137,7 +134,5 @@ const bandRanges: Record<string, string> = {
     font-style: normal;
     font-feature-settings: "tnum";
   }
-  .caption-source {
-    display: block;
-  }
+  .caption-source { display: block; }
 </style>

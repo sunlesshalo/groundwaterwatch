@@ -47,36 +47,64 @@ def project_geometry(geom, west: float, north: float, scale: float) -> str:
     raise TypeError(f"Unsupported geometry type: {type(geom)}")
 
 
-def main():
-    gdf = load_ro_hu_nuts2(BOUNDARIES_CACHE)
-    minx, miny, maxx, maxy = gdf.total_bounds
-    west = minx - VIEWBOX_PADDING_DEG
-    east = maxx + VIEWBOX_PADDING_DEG
-    south = miny - VIEWBOX_PADDING_DEG
-    north = maxy + VIEWBOX_PADDING_DEG
-    scale = TARGET_WIDTH / (east - west)
+def compute_view(bounds, target_width=TARGET_WIDTH, padding=VIEWBOX_PADDING_DEG):
+    minx, miny, maxx, maxy = bounds
+    west = minx - padding
+    east = maxx + padding
+    south = miny - padding
+    north = maxy + padding
+    scale = target_width / (east - west)
     height = (north - south) * scale
-    view_box = f"0 0 {TARGET_WIDTH:.0f} {height:.0f}"
+    return {
+        "viewBox": f"0 0 {target_width:.0f} {height:.0f}",
+        "bbox": [west, south, east, north],
+        "west": west,
+        "north": north,
+        "scale": scale,
+    }
 
+
+def project_set(gdf, view):
     paths = {}
     centroids = {}
     for _, row in gdf.iterrows():
         nuts_id = row["NUTS_ID"]
-        paths[nuts_id] = project_geometry(row["geometry"], west, north, scale)
+        paths[nuts_id] = project_geometry(row["geometry"], view["west"], view["north"], view["scale"])
         c = row["geometry"].representative_point()
         centroids[nuts_id] = {
-            "x": round((c.x - west) * scale, 1),
-            "y": round((north - c.y) * scale, 1),
+            "x": round((c.x - view["west"]) * view["scale"], 1),
+            "y": round((view["north"] - c.y) * view["scale"], 1),
+        }
+    return paths, centroids
+
+
+def main():
+    gdf = load_ro_hu_nuts2(BOUNDARIES_CACHE)
+
+    combined_view = compute_view(gdf.total_bounds)
+    combined_paths, combined_centroids = project_set(gdf, combined_view)
+
+    countries = {}
+    for code in ("RO", "HU"):
+        sub = gdf[gdf["CNTR_CODE"] == code]
+        view = compute_view(sub.total_bounds)
+        paths, centroids = project_set(sub, view)
+        countries[code] = {
+            "viewBox": view["viewBox"],
+            "bbox": view["bbox"],
+            "paths": paths,
+            "centroids": centroids,
         }
 
     DATA_OUT.parent.mkdir(parents=True, exist_ok=True)
     DATA_OUT.write_text(json.dumps({
-        "viewBox": view_box,
-        "bbox": [west, south, east, north],
-        "paths": paths,
-        "centroids": centroids,
+        "viewBox": combined_view["viewBox"],
+        "bbox": combined_view["bbox"],
+        "paths": combined_paths,
+        "centroids": combined_centroids,
+        "countries": countries,
     }, indent=2))
-    print(f"[ok] wrote {DATA_OUT.relative_to(REPO_ROOT)} ({len(paths)} regions, viewBox={view_box})")
+    print(f"[ok] wrote {DATA_OUT.relative_to(REPO_ROOT)} ({len(combined_paths)} regions combined, plus RO + HU per-country views)")
 
 
 if __name__ == "__main__":

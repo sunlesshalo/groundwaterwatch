@@ -30,11 +30,15 @@ export interface Timeseries {
   regions: Region[];
 }
 
-export interface MapData {
+export interface MapView {
   viewBox: string;
   bbox: [number, number, number, number];
   paths: Record<string, string>;
   centroids: Record<string, { x: number; y: number }>;
+}
+
+export interface MapData extends MapView {
+  countries: Record<"RO" | "HU", MapView>;
 }
 
 let cached: Timeseries | null = null;
