@@ -1,0 +1,103 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "scripts/pre-tool-check.sh"
+          },
+          {
+            "type": "command",
+            "command": "[ -f scripts/risk-gate.sh ] && bash scripts/risk-gate.sh; exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -f scripts/shadow-checkpoint.sh ] && bash scripts/shadow-checkpoint.sh save 'pre-write' 2>/dev/null; exit 0"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "scripts/auto-log-error.sh"
+          },
+          {
+            "type": "command",
+            "command": "[ -f scripts/audit-log.sh ] && bash scripts/audit-log.sh; exit 0"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== FOCUS ===' && jq -r '\"Project: \" + .project + \" | Focus: \" + .current_focus' memory/STATE.json 2>/dev/null && echo '' && echo '=== ACTIVE FEATURES ===' && jq -r '.features[] | select(.status != \"passing\") | \"[\" + .status + \"] \" + .feature' memory/STATE.json 2>/dev/null && echo '' && echo '=== RECENT CONTEXT ===' && tail -15 memory/CONTEXT.md 2>/dev/null || echo 'Memory not initialized'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(./init.sh)",
+      "Bash(./init.sh:*)",
+      "Bash(./scripts/*)",
+      "Bash(./scripts/identity-bootstrap.sh)",
+      "Bash(./scripts/identity-bootstrap.sh:*)",
+      "Bash([ ! -f config.json ]:*)",
+      "Bash([ -f config.json ]:*)",
+      "Bash([ -f init.sh ] && ./init.sh)",
+      "Bash([ -f init.sh ] && ./init.sh:*)",
+      "Bash([ -f init.sh ]:*)",
+      "Bash([:*)",
+      "Bash(cat:*)",
+      "Bash(command -v gauge:*)",
+      "Bash(echo:*)",
+      "Bash(gauge --push)",
+      "Bash(gauge:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git add:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)",
+      "Bash(git diff:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(git rebase:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(git remote:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(go test:*)",
+      "Bash(head:*)",
+      "Bash(if [ ! -f*)",
+      "Bash(if [ -f*)",
+      "Bash(if command -v gauge*)",
+      "Bash(npm test:*)",
+      "Bash(pwd)",
+      "Bash(pwd:*)",
+      "Bash(pytest:*)",
+      "Bash(tail:*)",
+      "Bash(test -f config.json*)",
+      "Bash(test -f init.sh*)",
+      "Bash(test -f tasks/plan.md*)",
+      "Bash(test:*)"
+    ],
+    "defaultMode": "bypassPermissions"
+  }
+}
