@@ -54,6 +54,47 @@ Went from a stale local repo to a live public site in one session.
 - **Next:** set the two secrets (before Monday), native-review the translations,
   open the site on a phone to check playback and the 12-column heatmap.
 
+## 2026-08-01 (later) — Secrets set, archive verified, deploy ref bug found
+
+Closed every blocker from the session above except the native translation read.
+
+- **Completed:**
+  - `EARTHDATA_USER` / `EARTHDATA_PASS` set as repository secrets, piped from
+    the local `~/.netrc` into `gh secret set` via stdin so the values never
+    appeared in a command line, shell history, or a transcript.
+  - Fixed the deploy workflow to check out `ref: main` (see landmines).
+  - Country pages reordered: region table now sits **above** the trend line and
+    heatmap, matching the homepage's map → categorisation → charts rhythm.
+  - Share card baseline note wrapped onto two lines; it was overrunning the
+    text panel by 14px onto the map background.
+
+- **Verified:**
+  - **Archive workflow ran green end to end for the first time** (run
+    30705952636, 42s). Auth, backfill, freshness, card, build, commit all
+    passed. The 1217-week archive came through **byte-identical** — the
+    resume-and-merge safety held under a real CI checkout.
+  - Deploy fix confirmed by the checkout refspec changing shape: from
+    `+<pinned-sha>:refs/remotes/origin/main` to `+refs/heads/main*:…`.
+  - Section order checked in the rendered HTML of all six country pages
+    (EN/RO/HU × RO/HU) and in DOM element order, then live after deploy.
+  - Share card measured by rendering the text layer with the map group
+    stripped out, so the map's antialiased edge could not be mistaken for
+    glyph ink. All 17 possible values of "N of 16" rendered: widest 508px,
+    24px clear of the panel edge at 532.
+  - Playback click/drag and the 12-column heatmap confirmed working in a real
+    browser by the user — this closes the two long-standing "verified in
+    markup but not in a browser" gaps on `timelapse-playback` and `charts`.
+
+- **Blockers:**
+  - RO/HU translations are still machine-authored and want a native read
+    before this is pitched to an editor. **This is now the only one.**
+
+- **Next:** native-review the RO/HU copy. Then optional: the embed widget,
+  the domain, and bumping the GitHub Actions versions (all are behind —
+  checkout/setup-node are on v4 against v7 latest, and Node 20 is deprecated
+  on the runners). Do the Actions bump as its own change; the Pages actions
+  move together and a bad bump breaks publishing.
+
 ### Landmines worth remembering
 
 - `data/weekly_*.json` are gitignored (one is grandfathered in). A fresh
@@ -63,5 +104,23 @@ Went from a stale local repo to a live public site in one session.
 - Pushes made with `GITHUB_TOKEN` do not trigger other workflows, so both data
   workflows call the deploy explicitly. Without that the site freezes while the
   data keeps updating.
+- **That fixes the trigger but not the ref.** Under `workflow_call`,
+  `actions/checkout` defaults to `github.sha` — the SHA that *started* the run,
+  which for the data workflows is frozen before the bot pushes its data commit.
+  So the deploy built the previous week's tree. `deploy.yml` is now pinned to
+  `ref: main`; do not remove it. Caught on run 30705952636: the archive pushed
+  `dfaeee2`, the deploy fetched `b5e0433`, and the live share card stayed at
+  the pre-commit bytes while `main` had the new ones.
+  Still only proven via the refspec shape and a push-triggered deploy — a true
+  `workflow_call` end-to-end test needs a run where the bot actually commits,
+  which only happens when a new archive week lands.
+- The share card is **deterministic per platform, not across platforms.**
+  macOS rsvg rendered it at 109516 bytes, the ubuntu runner at 108712 — same
+  input, same week. So the first CI run after a local regeneration always
+  produces one no-op churn commit. Harmless and self-resolving, but do not read
+  it as the data having changed.
+- Share card text is hand-wrapped SVG `<text>`; it does not reflow. The text
+  column must stay left of the map panel at `map_x - 24` (x=532). Re-measure
+  the rendered width before re-joining any line.
 - GitHub disables scheduled workflows after 60 days of repo inactivity.
   Unconfirmed whether the bot's own commits reset that timer.

@@ -3,7 +3,7 @@
   "description": "Public dashboard tracking groundwater depletion in Romania and Hungary from NASA GRACE-FO data assimilation, at NUTS-2 resolution.",
   "created": "2026-06-05",
   "live_url": "https://sunlesshalo.github.io/groundwaterwatch/",
-  "current_focus": "Set the EARTHDATA_USER/EARTHDATA_PASS repository secrets before the Monday 06:43 UTC archive run, then get a native read of the RO/HU copy.",
+  "current_focus": "Get a native read of the RO/HU copy. It is the last launch blocker: the secrets are set, the archive workflow has run green end to end, and playback and the charts are browser-verified.",
   "features": [
     {
       "name": "data-pipeline",
@@ -29,16 +29,16 @@
     {
       "name": "workflow-archive",
       "description": "Weekly GES DISC archive catch-up, Mondays 06:43 UTC, regenerates the share card.",
-      "status": "in_progress",
-      "verified": false,
-      "notes": "BLOCKED and UNTESTED. Requires EARTHDATA_USER/EARTHDATA_PASS repository secrets, which are not set. It has never run. YAML parses and every step was exercised locally, but the job itself is unverified end to end."
+      "status": "passing",
+      "verified": true,
+      "notes": "Secrets set 2026-08-01. First real run (30705952636) went green in 42s: Earthdata auth, backfill resume, freshness, card regen, build and commit all passed. timeseries.json came through byte-identical at 1217 weeks x 16 regions, no duplicates, so resume-and-merge holds under a real CI checkout. Its only commit was the share-card PNG re-encoding (see share-card notes)."
     },
     {
       "name": "workflow-deploy",
       "description": "GitHub Pages build and deploy; called explicitly by both data workflows.",
       "status": "passing",
       "verified": true,
-      "notes": "Green across several runs; all 13 live URLs return 200. Called explicitly because GITHUB_TOKEN pushes do not trigger workflows."
+      "notes": "Green across several runs; all 13 live URLs return 200. Called explicitly because GITHUB_TOKEN pushes do not trigger workflows. FIXED 2026-08-01: checkout is now pinned to ref: main. It defaulted to github.sha, which under workflow_call is the SHA that started the run - frozen before the bot's data commit - so the deploy published the previous week's tree. Proven by the refspec changing from a pinned SHA to +refs/heads/main*. A true workflow_call end-to-end test still needs a run where the bot actually commits."
     },
     {
       "name": "computed-lede",
@@ -59,7 +59,7 @@
       "description": "Generated 1200x630 OG card plus absolute social metadata, guarded so a stale card fails the build.",
       "status": "passing",
       "verified": true,
-      "notes": "Serves 200 as image/png at 1200x630, ratio 1.905, 107 KB. Build fails when the card for the newest week is missing. Regenerates deterministically."
+      "notes": "Serves 200 as image/png at 1200x630, ratio 1.905, 107 KB. Build fails when the card for the newest week is missing. Regenerates deterministically PER PLATFORM but not across them: macOS rsvg 109516 bytes vs ubuntu runner 108712 for the same week, so the first CI run after a local regen makes one no-op churn commit. 2026-08-01: baseline note wrapped onto two lines - it ran to x=546, 14px past the panel edge at 532, onto the map background. Now x=302/307. All 17 values of 'N of 16' checked: widest 508px, 24px clear."
     },
     {
       "name": "site-i18n",
@@ -72,15 +72,15 @@
       "name": "timelapse-playback",
       "description": "Visitor-controlled playback of all 1217 weeks with 0.5x-4x speed; progressive enhancement over the static map.",
       "status": "passing",
-      "verified": false,
-      "notes": "Payload, markup and timing verified: 16 columns match 16 rendered paths, no malformed rows, caption date-swap resolves to exactly one match in all three locales, and timing simulated at 60/120 Hz across all speeds lands within 0.1s. NOT verified: click and drag were never exercised in a real browser, since no browser automation was available."
+      "verified": true,
+      "notes": "Payload, markup and timing verified: 16 columns match 16 rendered paths, no malformed rows, caption date-swap resolves to exactly one match in all three locales, and timing simulated at 60/120 Hz across all speeds lands within 0.1s. Click and drag confirmed working in a real browser by the user on 2026-08-01, closing the last gap."
     },
     {
       "name": "charts",
       "description": "Trailing 52-week trend line per country and a year x month heatmap, server-rendered SVG.",
       "status": "passing",
       "verified": true,
-      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. Hover values rely on native SVG <title>, not exercised in a browser."
+      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. The 12-column heatmap confirmed in a real browser by the user on 2026-08-01. On country pages the charts now sit BELOW the region table, matching the homepage order."
     },
     {
       "name": "embed-widget",
