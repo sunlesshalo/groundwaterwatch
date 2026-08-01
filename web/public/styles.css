@@ -136,3 +136,25 @@ a:hover { text-decoration: none; }
 .lang-switch { display: flex; gap: 0.7rem; font-size: 0.82rem; }
 .lang-switch a { color: var(--ink-soft); text-decoration: none; }
 .lang-switch a.current { color: var(--ink); font-weight: 600; text-decoration: underline; }
+
+/* --- timelapse playback --- */
+.tl { margin-top: 0.7rem; }
+.tl-row { display: flex; align-items: center; gap: 0.7rem; }
+.tl-play {
+  flex: 0 0 auto;
+  min-width: 6.2rem;
+  padding: 0.42rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--paper);
+  background: var(--extreme);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.tl-play:hover { background: #8a2a2a; }
+.tl-play:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tl-scrub { flex: 1 1 auto; accent-color: var(--extreme); cursor: pointer; }
+.tl-hint { margin: 0.45rem 0 0; font-size: 0.78rem; color: var(--ink-soft); }
+.tl-lead { margin: 0 0 0.5rem; font-size: 0.9rem; color: var(--ink-soft); }

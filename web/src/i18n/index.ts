@@ -21,7 +21,7 @@ export const LOCALE_NAME: Record<Locale, string> = {
   hu: "Magyar",
 };
 
-const INTL_TAG: Record<Locale, string> = { en: "en-GB", ro: "ro-RO", hu: "hu-HU" };
+export const INTL_TAG: Record<Locale, string> = { en: "en-GB", ro: "ro-RO", hu: "hu-HU" };
 export const OG_LOCALE: Record<Locale, string> = { en: "en_GB", ro: "ro_RO", hu: "hu_HU" };
 
 export type PageKey = "home" | "romania" | "hungary" | "methodology";
@@ -116,6 +116,13 @@ interface Strings {
   lowN: string;
   lowNTitle: (cells: number) => string;
   legendCaption: (date: string) => string;
+
+  timelapseHeading: (years: number) => string;
+  timelapsePlay: string;
+  timelapsePause: string;
+  timelapseReplay: string;
+  timelapseScrub: string;
+  timelapseHint: (startYear: number) => string;
 }
 
 const en: Strings = {
@@ -194,6 +201,14 @@ const en: Strings = {
   lowN: "few cells",
   lowNTitle: (cells) => `only ${cells} satellite grid cell${cells === 1 ? "" : "s"} cover this region`,
   legendCaption: (date) => `Week of ${date}. Regions are EU NUTS-2 areas (Eurostat 2021).`,
+
+  timelapseHeading: (years) => `Watch ${years} years go by`,
+  timelapsePlay: "Play",
+  timelapsePause: "Pause",
+  timelapseReplay: "Play again",
+  timelapseScrub: "Week",
+  timelapseHint: (startYear) =>
+    `Press play to see every week since ${startYear}, or drag the slider to any point yourself.`,
 };
 
 const ro: Strings = {
@@ -272,6 +287,14 @@ const ro: Strings = {
   lowN: "puține celule",
   lowNTitle: (cells) => `doar ${cells} celule din grila satelitară acoperă această regiune`,
   legendCaption: (date) => `Săptămâna de ${date}. Regiunile sunt zone NUTS-2 ale UE (Eurostat 2021).`,
+
+  timelapseHeading: (years) => `Priviți cum trec ${years} ani`,
+  timelapsePlay: "Pornește",
+  timelapsePause: "Pauză",
+  timelapseReplay: "Reia",
+  timelapseScrub: "Săptămâna",
+  timelapseHint: (startYear) =>
+    `Apăsați „Pornește” pentru a vedea fiecare săptămână din ${startYear} încoace sau trageți cursorul unde doriți.`,
 };
 
 const hu: Strings = {
@@ -350,6 +373,14 @@ const hu: Strings = {
   lowN: "kevés cella",
   lowNTitle: (cells) => `mindössze ${cells} műholdas rácscella fedi ezt a régiót`,
   legendCaption: (date) => `${date} hete. A régiók az EU NUTS-2 területei (Eurostat 2021).`,
+
+  timelapseHeading: (years) => `Nézze végig, hogyan telt el ${years} év`,
+  timelapsePlay: "Indítás",
+  timelapsePause: "Szünet",
+  timelapseReplay: "Újra",
+  timelapseScrub: "Hét",
+  timelapseHint: (startYear) =>
+    `Nyomja meg az Indítás gombot, és végignézheti ${startYear} óta minden hetet — vagy húzza a csúszkát oda, ahová szeretné.`,
 };
 
 /** Ordinals differ enough between these three that a shared formatter would be wrong. */

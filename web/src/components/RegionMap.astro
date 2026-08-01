@@ -1,6 +1,6 @@
 ---
 import { loadMap, loadTimeseries, severityBand, bandColor } from "../lib/data";
-import { t, formatDate, formatNumber, type Locale } from "../i18n";
+import { t, formatDate, formatNumber, INTL_TAG, type Locale } from "../i18n";
 import type { Region, MapView } from "../lib/data";
 
 interface Props {
@@ -9,8 +9,12 @@ interface Props {
   showLabels?: boolean;
   focus?: "RO" | "HU" | "ALL";
   lang: Locale;
+  /** Adds play/scrub controls over the whole archive. The map renders
+   *  identically without JavaScript — playback is an enhancement, not the
+   *  only way to read it. */
+  timelapse?: boolean;
 }
-const { regions, week, showLabels = true, focus = "ALL", lang } = Astro.props;
+const { regions, week, showLabels = true, focus = "ALL", lang, timelapse = false } = Astro.props;
 const str = t(lang);
 
 const ts = loadTimeseries();
@@ -49,6 +53,25 @@ const features: Feature[] = visibleRegions
   });
 
 const tableIds = new Set(regions.map((r) => r.nuts_id));
+
+// Percentiles as integers (x10) keep the inline payload to ~33 KB gzipped for
+// the full 1217-week archive — small enough to ship with the page rather than
+// fetch, so scrubbing never waits on the network.
+const byId = new Map(visibleRegions.map((r) => [r.nuts_id, r]));
+const playbackIds = features.map((f) => f.nuts_id);
+const playback = timelapse
+  ? {
+      weeks: ts.weeks,
+      locale: INTL_TAG[lang],
+      labels: { play: str.timelapsePlay, pause: str.timelapsePause, replay: str.timelapseReplay },
+      v: ts.weeks.map((wk) =>
+        playbackIds.map((id) => {
+          const p = byId.get(id)?.weeks[wk]?.mean_percentile;
+          return typeof p === "number" ? Math.round(p * 10) : -1;
+        })
+      ),
+    }
+  : null;
 const bands = ["d4", "d3", "d2", "d1", "d0", "normal"] as const;
 const bandRanges: Record<string, string> = {
   d4: "≤ 2",
@@ -63,6 +86,7 @@ const bandRanges: Record<string, string> = {
   <svg viewBox={view.viewBox} role="img" aria-label={str.mapHeading(formatDate(lang, w))}>
     {features.map((f) => (
       <path
+        data-nuts={f.nuts_id}
         d={f.path}
         fill={f.pct === null ? "#e7e1d3" : bandColor(f.band)}
         stroke="#fff"
@@ -100,8 +124,30 @@ const bandRanges: Record<string, string> = {
         </span>
       ))}
     </span>
-    <span class="caption-source">{str.legendCaption(formatDate(lang, w))}</span>
+    <span class="caption-source" data-tl-caption>{str.legendCaption(formatDate(lang, w))}</span>
   </figcaption>
+
+  {playback && (
+    <div class="tl" data-timelapse>
+      <div class="tl-row">
+        <button type="button" class="tl-play" data-tl-play aria-describedby="tl-hint">
+          {str.timelapsePlay}
+        </button>
+        <input
+          type="range"
+          class="tl-scrub"
+          min="0"
+          max={playback.weeks.length - 1}
+          value={playback.weeks.length - 1}
+          step="1"
+          data-tl-scrub
+          aria-label={str.timelapseScrub}
+        />
+      </div>
+      <p class="tl-hint" id="tl-hint">{str.timelapseHint(Number(playback.weeks[0].slice(0, 4)))}</p>
+      <script type="application/json" data-tl-json set:html={JSON.stringify(playback)}></script>
+    </div>
+  )}
 </figure>
 
 <style>
@@ -139,3 +185,81 @@ const bandRanges: Record<string, string> = {
   }
   .caption-source { display: block; }
 </style>
+<script>
+  // Playback is progressive enhancement: without this the map still shows the
+  // latest week, server-rendered. Colours must match severityBand()/bandColor()
+  // in src/lib/data.ts.
+  const BANDS: [number, string][] = [
+    [2, "#6e1f1f"], [5, "#b04a2c"], [10, "#d28f3a"], [20, "#e0c068"], [30, "#a8aa6c"],
+  ];
+  const NORMAL = "#6a8e6f";
+  const NO_DATA = "#e7e1d3";
+  const FRAME_MS = 28; // ~34s for the full 1217-week archive
+
+  function colour(tenths: number): string {
+    if (tenths < 0) return NO_DATA;
+    const pct = tenths / 10;
+    for (const [limit, hex] of BANDS) if (pct <= limit) return hex;
+    return NORMAL;
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-timelapse]")) {
+    const figure = root.closest("figure");
+    const json = root.querySelector<HTMLScriptElement>("[data-tl-json]");
+    const play = root.querySelector<HTMLButtonElement>("[data-tl-play]");
+    const scrub = root.querySelector<HTMLInputElement>("[data-tl-scrub]");
+    const caption = figure?.querySelector<HTMLElement>("[data-tl-caption]");
+    if (!figure || !json || !play || !scrub) continue;
+
+    const data = JSON.parse(json.textContent || "{}");
+    const paths = Array.from(figure.querySelectorAll<SVGPathElement>("path[data-nuts]"));
+    const last = data.weeks.length - 1;
+    const fmt = new Intl.DateTimeFormat(data.locale, {
+      year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
+    });
+    // Reuse the server-rendered caption's wording, swapping only the date.
+    const template = caption?.textContent?.trim() ?? "";
+    const renderedDate = fmt.format(new Date(data.weeks[last] + "T00:00:00Z"));
+
+    let i = last;
+    let timer: number | null = null;
+
+    function draw(index: number) {
+      const row = data.v[index];
+      for (let n = 0; n < paths.length; n++) paths[n].setAttribute("fill", colour(row[n]));
+      if (caption && template) {
+        caption.textContent = template.replace(
+          renderedDate,
+          fmt.format(new Date(data.weeks[index] + "T00:00:00Z"))
+        );
+      }
+      scrub.value = String(index);
+    }
+
+    function stop() {
+      if (timer !== null) clearInterval(timer);
+      timer = null;
+      play.textContent = i >= last ? data.labels.replay : data.labels.play;
+      play.removeAttribute("data-playing");
+    }
+
+    function start() {
+      // Starting from the end means replaying, not sitting still.
+      if (i >= last) i = 0;
+      play.textContent = data.labels.pause;
+      play.setAttribute("data-playing", "");
+      timer = window.setInterval(() => {
+        i++;
+        draw(i);
+        if (i >= last) stop();
+      }, FRAME_MS);
+    }
+
+    play.addEventListener("click", () => (timer === null ? start() : stop()));
+    scrub.addEventListener("input", () => {
+      stop();
+      i = Number(scrub.value);
+      draw(i);
+    });
+  }
+</script>

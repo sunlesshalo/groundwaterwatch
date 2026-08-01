@@ -51,7 +51,8 @@ const startYear = Number(facts.recordStart.slice(0, 4));
   <p class="headline">{s.headline(formatDate(lang, latest), claim)}</p>
 
   <h2>{s.mapHeading(formatDate(lang, latest))}</h2>
-  <RegionMap regions={ts.regions} lang={lang} />
+  <p class="tl-lead">{s.timelapseHeading(facts.recordYears)}</p>
+  <RegionMap regions={ts.regions} lang={lang} timelapse />
 
   <h2>{s.breakdownHeading}</h2>
   <ul class="country-summary">
