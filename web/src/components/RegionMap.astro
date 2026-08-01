@@ -1,5 +1,6 @@
 ---
-import { loadMap, loadTimeseries, severityBand, bandColor, bandLabel } from "../lib/data";
+import { loadMap, loadTimeseries, severityBand, bandColor } from "../lib/data";
+import { t, formatDate, formatNumber, type Locale } from "../i18n";
 import type { Region, MapView } from "../lib/data";
 
 interface Props {
@@ -7,8 +8,10 @@ interface Props {
   week?: string;
   showLabels?: boolean;
   focus?: "RO" | "HU" | "ALL";
+  lang: Locale;
 }
-const { regions, week, showLabels = true, focus = "ALL" } = Astro.props;
+const { regions, week, showLabels = true, focus = "ALL", lang } = Astro.props;
+const str = t(lang);
 
 const ts = loadTimeseries();
 const w = week ?? ts.weeks[ts.weeks.length - 1];
@@ -57,7 +60,7 @@ const bandRanges: Record<string, string> = {
 };
 ---
 <figure class="region-map">
-  <svg viewBox={view.viewBox} role="img" aria-label={`Groundwater percentile choropleth for week of ${w}`}>
+  <svg viewBox={view.viewBox} role="img" aria-label={str.mapHeading(formatDate(lang, w))}>
     {features.map((f) => (
       <path
         d={f.path}
@@ -65,7 +68,7 @@ const bandRanges: Record<string, string> = {
         stroke="#fff"
         stroke-width="1"
       >
-        <title>{f.name} ({f.nuts_id}) — {f.pct === null ? "no data" : `${f.pct.toFixed(1)} pct`} · {bandLabel(f.band)}</title>
+        <title>{f.name} — {f.pct === null ? "—" : formatNumber(lang, f.pct)} · {str.bands[f.band]}</title>
       </path>
     ))}
     {showLabels && features.filter((f) => tableIds.has(f.nuts_id) && f.centroid).map((f) => (
@@ -92,12 +95,12 @@ const bandRanges: Record<string, string> = {
         <span class="legend-item">
           <span class="swatch" style={`background:${bandColor(b)};`}></span>
           <span class="legend-label">
-            {bandLabel(b)} <em>({bandRanges[b]})</em>
+            {str.bands[b]} <em>({bandRanges[b]})</em>
           </span>
         </span>
       ))}
     </span>
-    <span class="caption-source">Week of {w}. NUTS-2 (Eurostat 2021).</span>
+    <span class="caption-source">{str.legendCaption(formatDate(lang, w))}</span>
   </figcaption>
 </figure>
 

@@ -1,51 +1,86 @@
 ---
+import { ogImageHref, withBase } from "../lib/data";
+import {
+  t,
+  pagePath,
+  LOCALES,
+  LOCALE_NAME,
+  OG_LOCALE,
+  DEFAULT_LOCALE,
+  type Locale,
+  type PageKey,
+} from "../i18n";
+
 interface Props {
   title: string;
   description?: string;
+  lang?: Locale;
+  page?: PageKey;
 }
-import { ogImageHref, withBase } from "../lib/data";
-
-const { title, description = "Europe's hidden drought, mapped weekly. NASA GRACE-FO groundwater data for Romania and Hungary at NUTS-2 resolution." } = Astro.props;
+const { title, lang = DEFAULT_LOCALE, page = "home", description } = Astro.props;
+const s = t(lang);
+const desc = description ?? s.homeDescription;
 
 // Absolute URLs: Facebook and friends will not resolve a relative og:image
 // reliably, and a card that fails to load is the whole point of the card lost.
 // `site` comes from astro.config.mjs — set SITE_URL when deploying anywhere
 // other than the production domain.
+//
 // Trailing slash on directory paths, so the canonical URL is the one the host
 // actually serves rather than one that 301s — scrapers charge you for the hop.
 const pathname = Astro.url.pathname.endsWith("/") ? Astro.url.pathname : `${Astro.url.pathname}/`;
 const canonical = new URL(pathname, Astro.site).href;
 const ogImage = new URL(ogImageHref(), Astro.site).href;
+
+const abs = (l: Locale) => new URL(withBase(pagePath(l, page)), Astro.site).href;
+// The methodology page exists only in English, so it must not advertise
+// alternates that do not exist.
+const alternates = page === "methodology" ? [DEFAULT_LOCALE] : LOCALES;
 ---
 <!doctype html>
-<html lang="en">
+<html lang={s.htmlLang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={desc} />
     <link rel="canonical" href={canonical} />
+    {alternates.map((l) => (
+      <link rel="alternate" hreflang={l} href={abs(l)} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={abs(DEFAULT_LOCALE)} />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={desc} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content="groundwaterwatch" />
+    <meta property="og:locale" content={OG_LOCALE[lang]} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Groundwater percentile map of Romania and Hungary by NUTS-2 region" />
+    <meta property="og:image:alt" content="Groundwater map of Romania and Hungary by region" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
     <link rel="stylesheet" href={withBase("/styles.css")} />
   </head>
   <body>
     <header class="site-header">
-      <a href={withBase("/")} class="brand">groundwaterwatch</a>
+      <a href={withBase(pagePath(lang, "home"))} class="brand">groundwaterwatch</a>
       <nav>
-        <a href={withBase("/ro/")}>Romania</a>
-        <a href={withBase("/hu/")}>Hungary</a>
-        <a href={withBase("/methodology/")}>Methodology</a>
+        <a href={withBase(pagePath(lang, "romania"))}>{s.nav.romania}</a>
+        <a href={withBase(pagePath(lang, "hungary"))}>{s.nav.hungary}</a>
+        <a href={withBase(pagePath(lang, "methodology"))}>{s.nav.methodology}</a>
+      </nav>
+      <nav class="lang-switch" aria-label={s.langLabel}>
+        {LOCALES.map((l) => (
+          <a
+            href={withBase(pagePath(l, page === "methodology" ? "home" : page))}
+            hreflang={l}
+            aria-current={l === lang ? "true" : undefined}
+            class={l === lang ? "current" : undefined}
+          >{LOCALE_NAME[l]}</a>
+        ))}
       </nav>
     </header>
     <main>

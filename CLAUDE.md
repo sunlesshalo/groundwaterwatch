@@ -27,21 +27,23 @@ Public-facing data dashboard for European groundwater depletion. Awareness proje
 5. **Embed widget** — `<iframe>` per country for press partners
 6. **Hosting** — Hetzner CX22 + Cloudflare; cron on the same box
 
-Stack TBD: Astro or SvelteKit for frontend, Python (xarray + rasterstats) for ingest.
+Stack: Astro (static) for frontend, Python (xarray + regionmask) for ingest.
 
 ## v1 scope
 
-- Languages: EN only (translations after press traction)
+- Languages: EN (default, unprefixed) + RO + HU. Methodology page is EN-only for now — its hydrology vocabulary is where a translation slip costs the most credibility.
 - Countries: RO + HU
 - Domain: groundwaterwatch.eu (purchase pending)
-- GitHub: sunlesshalo/groundwaterwatch (private until launch)
+- GitHub: sunlesshalo/groundwaterwatch (public since 2026-08-01)
 
 ## Open decisions
 
-- [ ] Frontend framework (Astro vs. SvelteKit)
-- [ ] Hosting target (Hetzner CX22 confirmed in arch but not provisioned)
+- [x] Frontend framework — Astro, static output
+- [x] Hosting — GitHub Pages (project site at /groundwaterwatch/), deployed by
+      .github/workflows/deploy.yml. Hetzner was never provisioned and is not
+      needed: the site is fully static. BASE_PATH/SITE_URL make a move to a
+      root-served host or a custom domain a config change, not a code change.
 - [ ] Press partner outreach plan and timing relative to launch
-- [ ] When to flip the GitHub repo public
 
 ## What this project is not
 

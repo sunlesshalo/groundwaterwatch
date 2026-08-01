@@ -103,31 +103,34 @@ export function ledeFacts(ts: Timeseries, asOf?: string): LedeFacts {
   };
 }
 
-function ordinal(n: number): string {
-  const suffix = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return `${n}${suffix[(v - 20) % 10] ?? suffix[v] ?? suffix[0]}`;
-}
+/** What the data supports, with no wording attached.
+ *
+ * The claim is chosen here and phrased in src/i18n. Keeping the two apart means
+ * adding a language cannot quietly change what the site asserts — a translator
+ * picks words, never which superlative is allowed to appear.
+ */
+export type Claim =
+  | { key: "driest"; years: number }
+  | { key: "nthDriest"; rank: number; years: number }
+  | { key: "floor"; depleted: number; total: number };
 
 /** Strongest claim first. The last entry has no guard, so there is always a
- * true sentence to print — the page never depends on a superlative holding. */
-const CLAIMS: { when: (f: LedeFacts) => boolean; say: (f: LedeFacts) => string }[] = [
+ * true statement to print — the page never depends on a superlative holding. */
+const CLAIMS: { when: (f: LedeFacts) => boolean; claim: (f: LedeFacts) => Claim }[] = [
   {
     when: (f) => f.weekOfYearRank.rank === 1,
-    say: (f) => `the driest this week of the year has been in those ${f.recordYears} years`,
+    claim: (f) => ({ key: "driest", years: f.recordYears }),
   },
   {
     when: (f) => f.weekOfYearRank.rank <= 3,
-    say: (f) =>
-      `the ${ordinal(f.weekOfYearRank.rank)}-driest this week of the year in those ${f.recordYears} years`,
+    claim: (f) => ({ key: "nthDriest", rank: f.weekOfYearRank.rank, years: f.recordYears }),
   },
   {
     when: () => true,
-    say: (f) =>
-      `at or below the 2nd percentile of its NASA baseline across ${f.regionsAtOrBelow(D4)} of ${f.totalRegions} regions`,
+    claim: (f) => ({ key: "floor", depleted: f.regionsAtOrBelow(D4), total: f.totalRegions }),
   },
 ];
 
-export function ledeClaim(facts: LedeFacts): string {
-  return CLAIMS.find((c) => c.when(facts))!.say(facts);
+export function ledeClaim(facts: LedeFacts): Claim {
+  return CLAIMS.find((c) => c.when(facts))!.claim(facts);
 }

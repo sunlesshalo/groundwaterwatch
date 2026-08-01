@@ -121,3 +121,18 @@ a:hover { text-decoration: none; }
   color: var(--ink-soft);
 }
 .site-footer p { margin: 0; max-width: 90ch; }
+
+/* --- i18n additions --- */
+.headline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  border-left: 3px solid var(--extreme);
+  padding-left: 0.9rem;
+  margin: 1.1rem 0 1.4rem;
+}
+.country-summary { padding-left: 1.1rem; }
+.country-summary li { margin-bottom: 0.45rem; }
+.lang-switch { display: flex; gap: 0.7rem; font-size: 0.82rem; }
+.lang-switch a { color: var(--ink-soft); text-decoration: none; }
+.lang-switch a.current { color: var(--ink); font-weight: 600; text-decoration: underline; }

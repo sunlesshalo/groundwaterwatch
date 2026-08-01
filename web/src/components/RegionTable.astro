@@ -1,13 +1,16 @@
 ---
 import Sparkline from "./Sparkline.astro";
-import { type Region, severityBand, bandLabel, lastNValues, consecutiveWeeksAtOrBelow } from "../lib/data";
+import { type Region, severityBand, lastNValues, consecutiveWeeksAtOrBelow } from "../lib/data";
+import { t, formatNumber, type Locale } from "../i18n";
 
 interface Props {
   regions: Region[];
   weeks: string[];
   sparkWeeks?: number;
+  lang: Locale;
 }
-const { regions, weeks, sparkWeeks = 52 } = Astro.props;
+const { regions, weeks, sparkWeeks = 52, lang } = Astro.props;
+const s = t(lang);
 const latest = weeks[weeks.length - 1];
 
 const rows = regions.map((r) => {
@@ -22,11 +25,11 @@ const rows = regions.map((r) => {
 <table class="region-table">
   <thead>
     <tr>
-      <th>NUTS-2 region</th>
-      <th class="num">Mean pct</th>
-      <th>Band</th>
-      <th class="num">Wks ≤5%</th>
-      <th>Last {sparkWeeks} weeks</th>
+      <th>{s.table.region}</th>
+      <th class="num">{s.table.score}</th>
+      <th>{s.table.band}</th>
+      <th class="num">{s.table.weeksBelow}</th>
+      <th>{s.table.trend(sparkWeeks)}</th>
     </tr>
   </thead>
   <tbody>
@@ -36,15 +39,15 @@ const rows = regions.map((r) => {
           <strong>{r.name}</strong>
           <span style="color: var(--ink-soft); font-size: 0.78rem; margin-left: 0.4rem;">
             {r.nuts_id}
-            {validCells <= 3 && <span title={`${validCells} valid 25 km cell${validCells === 1 ? "" : "s"} — low confidence`}> · low-N</span>}
+            {validCells <= 3 && <span title={s.lowNTitle(validCells)}> · {s.lowN}</span>}
           </span>
         </td>
-        <td class="num">{pct === null ? "—" : pct.toFixed(1)}</td>
+        <td class="num">{pct === null ? "—" : formatNumber(lang, pct)}</td>
         <td>
           {band === "normal" ? (
-            <span style="color: var(--ink-soft); font-size: 0.85rem;">{bandLabel(band)}</span>
+            <span style="color: var(--ink-soft); font-size: 0.85rem;">{s.bands[band]}</span>
           ) : (
-            <span class={`band ${band}`}>{bandLabel(band)}</span>
+            <span class={`band ${band}`}>{s.bands[band]}</span>
           )}
         </td>
         <td class="num">{consecD3 || ""}</td>

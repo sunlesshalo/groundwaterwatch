@@ -1,0 +1,101 @@
+---
+import Base from "../layouts/Base.astro";
+import RegionMap from "./RegionMap.astro";
+import {
+  loadTimeseries,
+  regionsForCountry,
+  loadUnlLatest,
+  unlLayerHref,
+  withBase,
+} from "../lib/data";
+import { ledeFacts, ledeClaim } from "../lib/lede";
+import { t, formatDate, pagePath, renderClaim, yearsOf, type Locale } from "../i18n";
+
+interface Props {
+  lang: Locale;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+
+const ts = loadTimeseries();
+const latest = ts.weeks[ts.weeks.length - 1];
+const facts = ledeFacts(ts);
+const claim = renderClaim(lang, ledeClaim(facts));
+const streak = facts.longestStreak;
+
+const depletedIn = (country: "RO" | "HU") =>
+  regionsForCountry(country).filter((r) => {
+    const p = r.weeks[latest]?.mean_percentile;
+    return typeof p === "number" && p <= 2;
+  });
+
+const countries = (["HU", "RO"] as const).map((c) => ({
+  code: c,
+  name: s.countryName[c],
+  total: regionsForCountry(c).length,
+  depleted: depletedIn(c),
+}));
+
+const unl = loadUnlLatest();
+const unlHref = unlLayerHref(unl.week_start);
+const startYear = Number(facts.recordStart.slice(0, 4));
+---
+<Base
+  lang={lang}
+  title={s.homeTitle}
+  description={s.homeDescription}
+  page="home"
+>
+  <h1>{s.h1}</h1>
+  <p class="lede">{s.intro(startYear)}</p>
+  <p class="headline">{s.headline(formatDate(lang, latest), claim)}</p>
+
+  <h2>{s.mapHeading(formatDate(lang, latest))}</h2>
+  <RegionMap regions={ts.regions} lang={lang} />
+
+  <h2>{s.breakdownHeading}</h2>
+  <ul class="country-summary">
+    {countries.map((c) => (
+      <li>
+        {s.countryLine(
+          c.name,
+          c.depleted.length,
+          c.total,
+          c.depleted.map((r) => r.name).join(", ")
+        )}
+      </li>
+    ))}
+    <li>{s.streakLine(streak.region.name, streak.weeks, yearsOf(streak.weeks))}</li>
+  </ul>
+
+  <h2>{s.unlHeading(formatDate(lang, unl.week_start))}</h2>
+  <p style="margin-bottom: 0.6rem;">{s.unlBody}</p>
+  <p>
+    <img
+      src={unlHref}
+      alt={`NASA groundwater map, ${formatDate(lang, unl.week_start)}`}
+      style="max-width: 100%; height: auto; border: 1px solid var(--line);"
+    />
+  </p>
+
+  <h2>{s.pagesHeading}</h2>
+  <ul>
+    <li>
+      <a href={withBase(pagePath(lang, "romania"))}>
+        {s.pagesLink(s.countryName.RO, regionsForCountry("RO").length, facts.recordYears)}
+      </a>
+    </li>
+    <li>
+      <a href={withBase(pagePath(lang, "hungary"))}>
+        {s.pagesLink(s.countryName.HU, regionsForCountry("HU").length, facts.recordYears)}
+      </a>
+    </li>
+  </ul>
+
+  <h2>{s.explainHeading}</h2>
+  <p>{s.explainBody(facts.recordYears)}</p>
+
+  <div class="callout">
+    {s.methodologyCalloutPre}<a href={withBase(pagePath(lang, "methodology"))}>{s.methodologyLinkText}</a>{lang !== "en" && ` ${s.englishOnlyNote}`}{s.methodologyCalloutPost}
+  </div>
+</Base>

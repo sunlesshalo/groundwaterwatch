@@ -1,0 +1,50 @@
+---
+import Base from "../layouts/Base.astro";
+import RegionTable from "./RegionTable.astro";
+import RegionMap from "./RegionMap.astro";
+import { loadTimeseries, regionsForCountry, consecutiveWeeksAtOrBelow } from "../lib/data";
+import { t, formatDate, type Locale } from "../i18n";
+
+interface Props {
+  lang: Locale;
+  country: "RO" | "HU";
+}
+const { lang, country } = Astro.props;
+const s = t(lang);
+const name = s.countryName[country];
+
+const ts = loadTimeseries();
+const regions = regionsForCountry(country);
+const latest = ts.weeks[ts.weeks.length - 1];
+
+const atOrBelow = (threshold: number) =>
+  regions.filter((r) => {
+    const p = r.weeks[latest]?.mean_percentile;
+    return typeof p === "number" && p <= threshold;
+  }).length;
+
+const worstRegion = regions.reduce((best, r) =>
+  consecutiveWeeksAtOrBelow(r, ts.weeks, 5) > consecutiveWeeksAtOrBelow(best, ts.weeks, 5) ? r : best
+);
+const longestStreak = consecutiveWeeksAtOrBelow(worstRegion, ts.weeks, 5);
+---
+<Base
+  lang={lang}
+  title={s.countryTitle(name)}
+  description={s.countryDescription(name)}
+  page={country === "RO" ? "romania" : "hungary"}
+>
+  <h1>{name}</h1>
+  <p class="lede">
+    {s.countryLede(atOrBelow(2), regions.length, atOrBelow(5), formatDate(lang, latest))}
+    {longestStreak > 0 && ` ${s.countryStreak(longestStreak, worstRegion.name)}`}
+  </p>
+
+  <h2>{s.countryMapHeading(formatDate(lang, latest))}</h2>
+  <RegionMap regions={regions} week={latest} focus={country} lang={lang} />
+
+  <h2>{s.countryTableHeading(formatDate(lang, latest))}</h2>
+  <RegionTable regions={regions} weeks={ts.weeks} lang={lang} />
+
+  <p style="font-size: 0.85rem; color: var(--ink-soft);">{s.tableNote}</p>
+</Base>
