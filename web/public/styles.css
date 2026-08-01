@@ -164,3 +164,18 @@ a:hover { text-decoration: none; }
   .tl-row { flex-wrap: wrap; }
   .tl-scrub { order: 3; flex-basis: 100%; }
 }
+
+/* --- charts --- */
+.chart { margin: 1.2rem 0 1.8rem; }
+.chart svg { width: 100%; height: auto; display: block; background: var(--paper); }
+.chart figcaption { margin-top: 0.6rem; font-size: 0.78rem; color: var(--ink-soft); }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; margin-bottom: 0.5rem; font-size: 0.82rem; color: var(--ink-soft); }
+.chart-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+.chart-key { display: inline-block; width: 1.1rem; height: 0.2rem; border-radius: 1px; }
+.chart-tick { font-size: 10px; fill: #7c7a72; font-variant-numeric: tabular-nums; }
+.chart-note-text { font-size: 10px; fill: #7c7a72; }
+.chart-endlabel { font-size: 11px; fill: var(--ink); font-weight: 600; }
+.chart-table { margin-top: 0.7rem; font-size: 0.8rem; }
+.chart-table summary { cursor: pointer; color: var(--ink-soft); }
+.chart-table-scroll { overflow-x: auto; margin-top: 0.5rem; }
+.chart-table table { font-size: 0.76rem; }

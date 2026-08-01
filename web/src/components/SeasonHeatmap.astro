@@ -1,0 +1,99 @@
+---
+/** Years down, months across — the "along the years and months" view.
+ *
+ * Twenty-three years is far past any categorical palette, so this is a grid of
+ * magnitude, not a line per year. The colour scale is the same US Drought
+ * Monitor banding the map uses: multi-hue semantic heat rather than a plain
+ * light-to-dark ramp (its lightness is deliberately non-monotonic), which is
+ * allowed for a recognised heat scale as long as a scale legend ships with it.
+ * Inventing a second colour language for the same variable on the same page
+ * would cost the reader more than it gained.
+ *
+ * Because the encoding is colour on a continuous scale, it carries the required
+ * relief: a value on every cell's tooltip, and a full table view below.
+ */
+import { loadTimeseries, severityBand, bandColor } from "../lib/data";
+import { monthGrid } from "../lib/charts";
+import { t, formatNumber, INTL_TAG, type Locale } from "../i18n";
+
+interface Props {
+  lang: Locale;
+  country?: "RO" | "HU";
+}
+const { lang, country } = Astro.props;
+const s = t(lang);
+
+const grid = monthGrid(loadTimeseries(), country);
+const monthFmt = new Intl.DateTimeFormat(INTL_TAG[lang], { month: "short", timeZone: "UTC" });
+const months = Array.from({ length: 12 }, (_, m) => monthFmt.format(new Date(Date.UTC(2020, m, 15))));
+
+const CELL_W = 46;
+const CELL_H = 17;
+const GAP = 2; // surface gap: white does the separating, never a stroke
+const LEFT = 38;
+const TOP = 20;
+const W = LEFT + 12 * CELL_W;
+const H = TOP + grid.years.length * CELL_H + 4;
+
+const bands = ["d4", "d3", "d2", "d1", "d0", "normal"] as const;
+const bandRange: Record<string, string> = {
+  d4: "≤ 2", d3: "≤ 5", d2: "≤ 10", d1: "≤ 20", d0: "≤ 30", normal: "> 30",
+};
+---
+<figure class="chart">
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.heatmapAria}>
+    {months.map((m, i) => (
+      <text x={LEFT + i * CELL_W + (CELL_W - GAP) / 2} y={TOP - 7} text-anchor="middle" class="chart-tick">{m}</text>
+    ))}
+    {grid.years.map((year, r) => (
+      <text x={LEFT - 7} y={TOP + r * CELL_H + CELL_H / 2 + 3} text-anchor="end" class="chart-tick">{year}</text>
+    ))}
+    {grid.cells.map((row, r) =>
+      row.map((v, c) => (
+        <rect
+          x={LEFT + c * CELL_W}
+          y={TOP + r * CELL_H}
+          width={CELL_W - GAP}
+          height={CELL_H - GAP}
+          fill={v === null ? "#e7e1d3" : bandColor(severityBand(v))}
+        >
+          <title>{grid.years[r]} {months[c]} — {v === null ? "—" : formatNumber(lang, v)}</title>
+        </rect>
+      ))
+    )}
+  </svg>
+
+  <figcaption>
+    <span class="legend">
+      {bands.map((b) => (
+        <span class="legend-item">
+          <span class="swatch" style={`background:${bandColor(b)};`}></span>
+          <span class="legend-label">{s.bands[b]} <em>({bandRange[b]})</em></span>
+        </span>
+      ))}
+    </span>
+    <span class="caption-source">{s.heatmapNote}</span>
+  </figcaption>
+
+  <details class="chart-table">
+    <summary>{s.tableView}</summary>
+    <div class="chart-table-scroll">
+      <table class="region-table">
+        <thead>
+          <tr>
+            <th>{s.yearColumn}</th>
+            {months.map((m) => <th class="num">{m}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {grid.cells.map((row, r) => (
+            <tr>
+              <td><strong>{grid.years[r]}</strong></td>
+              {row.map((v) => <td class="num">{v === null ? "—" : formatNumber(lang, v)}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</figure>

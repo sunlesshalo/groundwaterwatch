@@ -9,6 +9,8 @@ import {
   withBase,
 } from "../lib/data";
 import { ledeFacts, ledeClaim } from "../lib/lede";
+import TrendChart from "./TrendChart.astro";
+import SeasonHeatmap from "./SeasonHeatmap.astro";
 import { t, formatDate, pagePath, renderClaim, yearsOf, type Locale } from "../i18n";
 
 interface Props {
@@ -68,6 +70,12 @@ const startYear = Number(facts.recordStart.slice(0, 4));
     ))}
     <li>{s.streakLine(streak.region.name, streak.weeks, yearsOf(streak.weeks))}</li>
   </ul>
+
+  <h2>{s.trendHeading}</h2>
+  <TrendChart lang={lang} />
+
+  <h2>{s.heatmapHeading}</h2>
+  <SeasonHeatmap lang={lang} />
 
   <h2>{s.unlHeading(formatDate(lang, unl.week_start))}</h2>
   <p style="margin-bottom: 0.6rem;">{s.unlBody}</p>

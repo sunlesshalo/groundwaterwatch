@@ -3,6 +3,8 @@ import Base from "../layouts/Base.astro";
 import RegionTable from "./RegionTable.astro";
 import RegionMap from "./RegionMap.astro";
 import { loadTimeseries, regionsForCountry, consecutiveWeeksAtOrBelow } from "../lib/data";
+import TrendChart from "./TrendChart.astro";
+import SeasonHeatmap from "./SeasonHeatmap.astro";
 import { t, formatDate, type Locale } from "../i18n";
 
 interface Props {
@@ -42,6 +44,12 @@ const longestStreak = consecutiveWeeksAtOrBelow(worstRegion, ts.weeks, 5);
 
   <h2>{s.countryMapHeading(formatDate(lang, latest))}</h2>
   <RegionMap regions={regions} week={latest} focus={country} lang={lang} timelapse />
+
+  <h2>{s.trendHeading}</h2>
+  <TrendChart lang={lang} country={country} />
+
+  <h2>{s.heatmapHeading}</h2>
+  <SeasonHeatmap lang={lang} country={country} />
 
   <h2>{s.countryTableHeading(formatDate(lang, latest))}</h2>
   <RegionTable regions={regions} weeks={ts.weeks} lang={lang} />

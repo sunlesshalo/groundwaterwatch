@@ -123,6 +123,16 @@ interface Strings {
   timelapseReplay: string;
   timelapseScrub: string;
   timelapseSpeed: string;
+
+  trendHeading: string;
+  trendNote: (window: number) => string;
+  trendAria: (window: number) => string;
+  trendNormal: string;
+  heatmapHeading: string;
+  heatmapNote: string;
+  heatmapAria: string;
+  tableView: string;
+  yearColumn: string;
   timelapseHint: (startYear: number) => string;
 }
 
@@ -209,6 +219,18 @@ const en: Strings = {
   timelapseReplay: "Play again",
   timelapseScrub: "Week",
   timelapseSpeed: "Speed",
+
+  trendHeading: "How it has changed since 2003",
+  trendNote: (w) =>
+    `Each line is the average of the previous ${w} weeks, which strips out the seasonal rise and fall so the longer trend is visible. 50 is an ordinary year; lower is drier.`,
+  trendAria: (w) => `Line chart of the trailing ${w}-week average groundwater score since 2003`,
+  trendNormal: "an ordinary year",
+  heatmapHeading: "Year by year, month by month",
+  heatmapNote:
+    "Each square is one month's average score. Hover a square for the number. Blank squares are months the archive does not cover yet.",
+  heatmapAria: "Grid of monthly average groundwater scores, one row per year",
+  tableView: "Show these numbers as a table",
+  yearColumn: "Year",
   timelapseHint: (startYear) =>
     `Press play to see every week since ${startYear}, or drag the slider to any point yourself.`,
 };
@@ -296,6 +318,18 @@ const ro: Strings = {
   timelapseReplay: "Reia",
   timelapseScrub: "Săptămâna",
   timelapseSpeed: "Viteză",
+
+  trendHeading: "Cum s-a schimbat din 2003",
+  trendNote: (w) =>
+    `Fiecare linie este media ultimelor ${w} de săptămâni, care elimină variația sezonieră și lasă la vedere tendința pe termen lung. 50 înseamnă un an obișnuit; mai puțin înseamnă mai secetos.`,
+  trendAria: (w) => `Grafic liniar al mediei pe ${w} de săptămâni a scorului apei subterane din 2003`,
+  trendNormal: "un an obișnuit",
+  heatmapHeading: "An după an, lună după lună",
+  heatmapNote:
+    "Fiecare pătrat este scorul mediu al unei luni. Treceți cu mouse-ul peste pătrat pentru valoare. Pătratele goale sunt luni pe care arhiva nu le acoperă încă.",
+  heatmapAria: "Grilă cu scorurile medii lunare ale apei subterane, câte un rând pentru fiecare an",
+  tableView: "Afișează aceste valori ca tabel",
+  yearColumn: "Anul",
   timelapseHint: (startYear) =>
     `Apăsați „Pornește” pentru a vedea fiecare săptămână din ${startYear} încoace sau trageți cursorul unde doriți.`,
 };
@@ -383,6 +417,18 @@ const hu: Strings = {
   timelapseReplay: "Újra",
   timelapseScrub: "Hét",
   timelapseSpeed: "Sebesség",
+
+  trendHeading: "Hogyan változott 2003 óta",
+  trendNote: (w) =>
+    `Mindegyik vonal az előző ${w} hét átlaga, amely kiszűri az évszakos ingadozást, így a hosszú távú tendencia látszik. Az 50 egy szokásos évet jelöl; ami ez alatt van, az szárazabb.`,
+  trendAria: (w) => `Vonaldiagram a felszín alatti vízkészlet ${w} hetes átlagáról 2003 óta`,
+  trendNormal: "szokásos év",
+  heatmapHeading: "Évről évre, hónapról hónapra",
+  heatmapNote:
+    "Minden négyzet egy hónap átlagos pontszáma. Vigye rá az egeret a pontos értékért. Az üres négyzetek olyan hónapok, amelyeket az archívum még nem fed le.",
+  heatmapAria: "A havi átlagos pontszámok rácsa, soronként egy évvel",
+  tableView: "Mutasd táblázatként",
+  yearColumn: "Év",
   timelapseHint: (startYear) =>
     `Nyomja meg az Indítás gombot, és végignézheti ${startYear} óta minden hetet — vagy húzza a csúszkát oda, ahová szeretné.`,
 };
