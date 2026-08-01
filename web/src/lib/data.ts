@@ -81,6 +81,25 @@ export function unlLayerHref(week: string, layer: UnlLayer = "gws"): string {
   return `/maps/${week}/${layer}.png`;
 }
 
+/** Site-relative href for the share card of the newest week.
+ *
+ * Versioned by week and guarded the same way as the UNL map: a card is cached
+ * by every platform it is shared to, so shipping one that disagrees with the
+ * page is worse than failing the build. Regenerate with
+ * `uv run python -m pipeline.share_card --out ../web/public/og --prune`.
+ */
+export function ogImageHref(): string {
+  const week = latestWeek();
+  const file = path.join(PUBLIC_DIR, "og", `${week}.png`);
+  if (!fs.existsSync(file)) {
+    throw new Error(
+      `no share card for the newest week (${week}); og/${week}.png is missing. ` +
+        `Run: cd pipeline && uv run python -m pipeline.share_card --out ../web/public/og --prune`
+    );
+  }
+  return `/og/${week}.png`;
+}
+
 export function regionsForCountry(country: "RO" | "HU"): Region[] {
   return loadTimeseries().regions.filter((r) => r.country === country);
 }

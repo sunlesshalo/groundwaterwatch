@@ -77,6 +77,19 @@ directory always matches its `manifest.json`; `--prune` runs only after every
 selected layer downloads, so a UNL outage leaves the previous week in place
 rather than emptying the directory.
 
+### Share card
+
+Renders the 1200×630 Open Graph card from the newest week's data. Needs
+`rsvg-convert` (`brew install librsvg` / `apt-get install -y librsvg2-bin`):
+
+```sh
+uv run python -m pipeline.share_card --out ../web/public/og --prune
+```
+
+The card is versioned by week and the web build fails if the newest week has no
+card, so it cannot silently drift from the page. The archive workflow
+regenerates it whenever the archive advances.
+
 ### Freshness guard
 
 Fails when a feed has stopped advancing, which otherwise looks identical to a
