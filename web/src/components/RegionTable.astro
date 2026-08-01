@@ -1,6 +1,6 @@
 ---
 import Sparkline from "./Sparkline.astro";
-import { type Region, severityBand, lastNValues, consecutiveWeeksAtOrBelow } from "../lib/data";
+import { type Region, severityBand, bandColor, lastNValues, consecutiveWeeksAtOrBelow } from "../lib/data";
 import { t, formatNumber, type Locale } from "../i18n";
 
 interface Props {
@@ -34,24 +34,23 @@ const rows = regions.map((r) => {
   </thead>
   <tbody>
     {rows.map(({ r, pct, band, consecD3, sparkValues, validCells }) => (
-      <tr>
-        <td>
-          <strong>{r.name}</strong>
-          <span style="color: var(--ink-soft); font-size: 0.78rem; margin-left: 0.4rem;">
+      <tr data-row-nuts={r.nuts_id}>
+        <td class="cell-region">
+          <span class="region-name">{r.name}</span>
+          <span class="region-meta">
             {r.nuts_id}
-            {validCells <= 3 && <span title={s.lowNTitle(validCells)}> · {s.lowN}</span>}
+            {validCells <= 3 && <> · <span class="low-n" title={s.lowNTitle(validCells)}>{s.lowN}</span></>}
           </span>
         </td>
-        <td class="num">{pct === null ? "—" : formatNumber(lang, pct)}</td>
+        {/* The score stays ink. Tinting it by band would put #e0c068 on paper
+            at about 1.5:1 — the pill beside it carries severity in colour, at
+            contrast that holds. */}
+        <td class="num"><span class="score">{pct === null ? "—" : formatNumber(lang, pct)}</span></td>
         <td>
-          {band === "normal" ? (
-            <span style="color: var(--ink-soft); font-size: 0.85rem;">{s.bands[band]}</span>
-          ) : (
-            <span class={`band ${band}`}>{s.bands[band]}</span>
-          )}
+          <span class={`band ${band}`}>{s.bands[band]}</span>
         </td>
         <td class="num">{consecD3 || ""}</td>
-        <td><Sparkline values={sparkValues} /></td>
+        <td><Sparkline values={sparkValues} dotColor={bandColor(band)} /></td>
       </tr>
     ))}
   </tbody>

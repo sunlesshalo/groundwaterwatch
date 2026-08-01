@@ -10,7 +10,7 @@
  * would cost the reader more than it gained.
  *
  * Because the encoding is colour on a continuous scale, it carries the required
- * relief: a value on every cell's tooltip, and a full table view below.
+ * relief: a value on every cell's readout, and a full table view below.
  */
 import { loadTimeseries, severityBand, bandColor } from "../lib/data";
 import { monthGrid } from "../lib/charts";
@@ -28,10 +28,10 @@ const monthFmt = new Intl.DateTimeFormat(INTL_TAG[lang], { month: "short", timeZ
 const months = Array.from({ length: 12 }, (_, m) => monthFmt.format(new Date(Date.UTC(2020, m, 15))));
 
 const CELL_W = 46;
-const CELL_H = 17;
-const GAP = 2; // surface gap: white does the separating, never a stroke
-const LEFT = 38;
-const TOP = 20;
+const CELL_H = 21;
+const GAP = 2; // surface gap: the panel does the separating, never a stroke
+const LEFT = 40;
+const TOP = 22;
 const W = LEFT + 12 * CELL_W;
 const H = TOP + grid.years.length * CELL_H + 4;
 
@@ -39,36 +39,47 @@ const bands = ["d4", "d3", "d2", "d1", "d0", "normal"] as const;
 const bandRange: Record<string, string> = {
   d4: "≤ 2", d3: "≤ 5", d2: "≤ 10", d1: "≤ 20", d0: "≤ 30", normal: "> 30",
 };
+
+const bandNames = s.bands;
 ---
-<figure class="chart">
-  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.heatmapAria}>
-    {months.map((m, i) => (
-      <text x={LEFT + i * CELL_W + (CELL_W - GAP) / 2} y={TOP - 7} text-anchor="middle" class="chart-tick">{m}</text>
-    ))}
-    {grid.years.map((year, r) => (
-      <text x={LEFT - 7} y={TOP + r * CELL_H + CELL_H / 2 + 3} text-anchor="end" class="chart-tick">{year}</text>
-    ))}
-    {grid.cells.map((row, r) =>
-      row.map((v, c) => (
-        <rect
-          x={LEFT + c * CELL_W}
-          y={TOP + r * CELL_H}
-          width={CELL_W - GAP}
-          height={CELL_H - GAP}
-          fill={v === null ? "#e7e1d3" : bandColor(severityBand(v))}
-        >
-          <title>{grid.years[r]} {months[c]} — {v === null ? "—" : formatNumber(lang, v)}</title>
-        </rect>
-      ))
-    )}
-  </svg>
+<figure class="chart chart-panel" data-heat>
+  <div class="heat-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={s.heatmapAria} class="heat-grid" data-heat-grid>
+      {months.map((m, i) => (
+        <text x={LEFT + i * CELL_W + (CELL_W - GAP) / 2} y={TOP - 8} text-anchor="middle" class="chart-tick">{m}</text>
+      ))}
+      {grid.years.map((year, r) => (
+        <text x={LEFT - 8} y={TOP + r * CELL_H + CELL_H / 2 + 3} text-anchor="end" class="chart-tick">{year}</text>
+      ))}
+      {grid.cells.map((row, r) =>
+        row.map((v, c) => (
+          <rect
+            class="heat-cell"
+            data-v={v === null ? "" : formatNumber(lang, v)}
+            data-band={v === null ? "" : bandNames[severityBand(v)]}
+            data-when={`${grid.years[r]} ${months[c]}`}
+            x={LEFT + c * CELL_W}
+            y={TOP + r * CELL_H}
+            width={CELL_W - GAP}
+            height={CELL_H - GAP}
+            rx="1.5"
+            fill={v === null ? "#e0dccf" : bandColor(severityBand(v))}
+          >
+            <title>{grid.years[r]} {months[c]} — {v === null ? "—" : formatNumber(lang, v)}</title>
+          </rect>
+        ))
+      )}
+    </svg>
+  </div>
+
+  <div class="readout" data-heat-readout hidden aria-hidden="true"></div>
 
   <figcaption>
     <span class="legend">
       {bands.map((b) => (
         <span class="legend-item">
           <span class="swatch" style={`background:${bandColor(b)};`}></span>
-          <span class="legend-label">{s.bands[b]} <em>({bandRange[b]})</em></span>
+          {s.bands[b]} <em>({bandRange[b]})</em>
         </span>
       ))}
     </span>
@@ -97,3 +108,72 @@ const bandRange: Record<string, string> = {
     </div>
   </details>
 </figure>
+
+<style>
+  /* 12 columns of readable width have a floor. Below it the grid scrolls
+     sideways inside the panel rather than squeezing months into 14px. */
+  .heat-scroll { overflow-x: auto; overflow-y: hidden; }
+  .heat-scroll > svg { min-width: 34rem; }
+</style>
+
+<script>
+  for (const fig of document.querySelectorAll<HTMLElement>("[data-heat]")) {
+    const gridEl = fig.querySelector<SVGSVGElement>("[data-heat-grid]");
+    const card = fig.querySelector<HTMLElement>("[data-heat-readout]");
+    if (!gridEl || !card) continue;
+    const cells = Array.from(gridEl.querySelectorAll<SVGRectElement>(".heat-cell"));
+    const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+
+    // Same reason as the map: the native tooltip would arrive a second later
+    // and say the same thing in a box we cannot style.
+    for (const cell of cells) cell.querySelector("title")?.remove();
+
+    function place(e: PointerEvent) {
+      const box = fig.getBoundingClientRect();
+      const cw = card.offsetWidth;
+      const ch = card.offsetHeight;
+      let x = e.clientX - box.left + 14;
+      let y = e.clientY - box.top + 14;
+      if (x + cw > box.width - 6) x = e.clientX - box.left - cw - 14;
+      if (y + ch > box.height - 6) y = e.clientY - box.top - ch - 14;
+      card.style.left = `${Math.max(6, Math.min(x, box.width - cw - 6))}px`;
+      card.style.top = `${Math.max(6, y)}px`;
+    }
+
+    for (const cell of cells) {
+      cell.addEventListener("pointerenter", (e) => {
+        const v = cell.dataset.v;
+        card.hidden = false;
+        card.innerHTML =
+          `<p class="readout-sub">${esc(cell.dataset.when || "")}</p>` +
+          `<div class="readout-score"><span class="readout-value" style="color:${cell.getAttribute("fill")}">${v ? esc(v) : "—"}</span>` +
+          `<span class="readout-of">/100</span></div>` +
+          (cell.dataset.band ? `<span class="band ${severityOf(cell)}">${esc(cell.dataset.band)}</span>` : "");
+        card.setAttribute("data-show", "");
+        place(e as PointerEvent);
+        gridEl.setAttribute("data-active", "");
+        for (const other of cells) other.toggleAttribute("data-on", other === cell);
+      });
+      cell.addEventListener("pointermove", (e) => place(e as PointerEvent));
+      cell.addEventListener("pointerleave", () => {
+        card.removeAttribute("data-show");
+        card.hidden = true;
+        gridEl.removeAttribute("data-active");
+        for (const other of cells) other.removeAttribute("data-on");
+      });
+    }
+
+    // Recover the band key from the fill, so the pill in the readout matches
+    // the cell exactly without shipping a second copy of the banding.
+    function severityOf(cell: SVGRectElement): string {
+      return {
+        "#6e1f1f": "d4",
+        "#b04a2c": "d3",
+        "#d28f3a": "d2",
+        "#e0c068": "d1",
+        "#a8aa6c": "d0",
+        "#6a8e6f": "normal",
+      }[cell.getAttribute("fill") || ""] || "normal";
+    }
+  }
+</script>

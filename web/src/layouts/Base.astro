@@ -65,12 +65,22 @@ const alternates = page === "methodology" ? [DEFAULT_LOCALE] : LOCALES;
     <link rel="stylesheet" href={withBase("/styles.css")} />
   </head>
   <body>
+    <a class="skip-link" href="#main">{s.skipToContent}</a>
     <header class="site-header">
-      <a href={withBase(pagePath(lang, "home"))} class="brand">groundwaterwatch</a>
-      <nav>
-        <a href={withBase(pagePath(lang, "romania"))}>{s.nav.romania}</a>
-        <a href={withBase(pagePath(lang, "hungary"))}>{s.nav.hungary}</a>
-        <a href={withBase(pagePath(lang, "methodology"))}>{s.nav.methodology}</a>
+      <a href={withBase(pagePath(lang, "home"))} class="brand">
+        {/* Three falling water-table lines. Decorative — the wordmark carries
+            the name, so it stays out of the accessibility tree. */}
+        <svg class="brand-mark" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+          <path d="M1 4.5 Q5 2.6 9 4.5 T17 4.5" fill="none" stroke="#6a8e6f" stroke-width="1.6" stroke-linecap="round" />
+          <path d="M1 9 Q5 7.1 9 9 T17 9" fill="none" stroke="#d28f3a" stroke-width="1.6" stroke-linecap="round" />
+          <path d="M1 13.5 Q5 11.6 9 13.5 T17 13.5" fill="none" stroke="#6e1f1f" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        groundwaterwatch
+      </a>
+      <nav class="site-nav" aria-label={s.nav.sections}>
+        <a href={withBase(pagePath(lang, "romania"))} aria-current={page === "romania" ? "page" : undefined}>{s.nav.romania}</a>
+        <a href={withBase(pagePath(lang, "hungary"))} aria-current={page === "hungary" ? "page" : undefined}>{s.nav.hungary}</a>
+        <a href={withBase(pagePath(lang, "methodology"))} aria-current={page === "methodology" ? "page" : undefined}>{s.nav.methodology}</a>
       </nav>
       <nav class="lang-switch" aria-label={s.langLabel}>
         {LOCALES.map((l) => (
@@ -83,17 +93,19 @@ const alternates = page === "methodology" ? [DEFAULT_LOCALE] : LOCALES;
         ))}
       </nav>
     </header>
-    <main>
+    <main id="main" class="wrap">
       <slot />
     </main>
     <footer class="site-footer">
-      <p>
-        Data: NASA GRACE-FO Data Assimilation
-        (<a href="https://disc.gsfc.nasa.gov/datasets/GRACEDADM_CLSM025GL_7D_3.0/summary">GRACEDADM_CLSM025GL_7D V3.0</a>)
-        and operational maps from <a href="https://nasagrace.unl.edu/">NASA GRACE / NDMC</a>.
-        Boundaries: <a href="https://gisco-services.ec.europa.eu/distribution/v2/nuts/">Eurostat NUTS 2021 (1:1M)</a>.
-        Code: <a href="https://github.com/sunlesshalo/groundwaterwatch">github.com/sunlesshalo/groundwaterwatch</a>.
-      </p>
+      <div class="site-footer-inner">
+        <p>
+          Data: NASA GRACE-FO Data Assimilation
+          (<a href="https://disc.gsfc.nasa.gov/datasets/GRACEDADM_CLSM025GL_7D_3.0/summary">GRACEDADM_CLSM025GL_7D V3.0</a>)
+          and operational maps from <a href="https://nasagrace.unl.edu/">NASA GRACE / NDMC</a>.
+          Boundaries: <a href="https://gisco-services.ec.europa.eu/distribution/v2/nuts/">Eurostat NUTS 2021 (1:1M)</a>.
+          Code: <a href="https://github.com/sunlesshalo/groundwaterwatch">github.com/sunlesshalo/groundwaterwatch</a>.
+        </p>
+      </div>
     </footer>
   </body>
 </html>

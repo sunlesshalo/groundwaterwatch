@@ -1,150 +1,256 @@
 ---
-import { loadMap, loadTimeseries, severityBand, bandColor } from "../lib/data";
+/** The map, and the controls that move it through time.
+ *
+ * Three things here are deliberate:
+ *
+ *  - Labels are chosen at build time by fitting estimated text width against
+ *    each region's path bounding box. A label that does not fit is not drawn,
+ *    rather than drawn overlapping its neighbour. The combined map carries
+ *    scores only (the countries' regions are too small for names at that
+ *    scale); a single-country map carries name and score.
+ *  - Emphasis is by dimming everything else. The fill of a region is its value,
+ *    so hovering must never change it.
+ *  - The scrub track is a ribbon of the national average over the whole
+ *    archive, so the shape of the drought is visible before you drag into it.
+ */
+import { loadMap, loadTimeseries, severityBand, bandColor, pathBBox } from "../lib/data";
+import { weeklySeries } from "../lib/charts";
 import { t, formatDate, formatNumber, INTL_TAG, type Locale } from "../i18n";
-import type { Region, MapView } from "../lib/data";
+import type { MapView } from "../lib/data";
 
 interface Props {
-  regions: Region[];
   week?: string;
-  showLabels?: boolean;
   focus?: "RO" | "HU" | "ALL";
   lang: Locale;
   /** Adds play/scrub controls over the whole archive. The map renders
    *  identically without JavaScript — playback is an enhancement, not the
    *  only way to read it. */
   timelapse?: boolean;
+  /** Rendered inside the block so playback can keep its date in step with the
+   *  map. A heading outside the component would say "week of 25 May 2026"
+   *  while the map showed 2009. */
+  heading?: string;
+  headingLevel?: "h2" | "h3";
+  /** Call to action above the scrub hint, e.g. "Watch 23 years go by". */
+  transportLead?: string;
 }
-const { regions, week, showLabels = true, focus = "ALL", lang, timelapse = false } = Astro.props;
+const {
+  week,
+  focus = "ALL",
+  lang,
+  timelapse = false,
+  heading,
+  headingLevel = "h2",
+  transportLead,
+} = Astro.props;
 const str = t(lang);
 
 const ts = loadTimeseries();
 const w = week ?? ts.weeks[ts.weeks.length - 1];
 const mapData = loadMap();
 
-const view: MapView = focus === "ALL"
-  ? mapData
-  : mapData.countries[focus];
+const view: MapView = focus === "ALL" ? mapData : mapData.countries[focus];
+const visibleRegions = focus === "ALL" ? ts.regions : ts.regions.filter((r) => r.country === focus);
 
-const visibleRegions = focus === "ALL"
-  ? ts.regions
-  : ts.regions.filter((r) => r.country === focus);
+/** Score as it appears on the map face: one decimal below 10, where the
+ *  difference between 0.8 and 1.4 is the whole story, and none above it, where
+ *  it is noise. The client-side playback formatter must match. */
+const fmtScore = (v: number) => formatNumber(lang, v, v < 10 ? 1 : 0);
 
-interface Feature {
-  nuts_id: string;
-  name: string;
-  pct: number | null;
-  band: string;
-  path: string;
-  centroid: { x: number; y: number } | undefined;
-}
+// Estimated advance widths for the sans stack. Deliberately generous — the
+// cost of overestimating is a missing label, of underestimating is two labels
+// on top of each other.
+const CHAR_W = 0.56;
+const DIGIT_W = 0.62;
 
-const features: Feature[] = visibleRegions
+const SIZES = focus === "ALL"
+  ? { score: 19, name: 0 }
+  : { score: 17, name: 13 };
+
+const features = visibleRegions
   .filter((r) => view.paths[r.nuts_id])
   .map((r) => {
     const pct = r.weeks[w]?.mean_percentile ?? null;
+    const band = severityBand(pct);
+    const box = pathBBox(view.paths[r.nuts_id]);
+    const centroid = view.centroids[r.nuts_id];
+    const scoreText = pct === null ? "" : fmtScore(pct);
+
+    // Fit against the box, not the viewport: a label belongs to its region.
+    const scoreW = scoreText.length * DIGIT_W * SIZES.score;
+    const nameW = r.name.length * CHAR_W * SIZES.name;
+    const showScore =
+      !!centroid && !!scoreText && scoreW <= box.w * 0.82 && SIZES.score * 1.1 <= box.h;
+    const showName =
+      showScore &&
+      SIZES.name > 0 &&
+      nameW <= box.w * 0.86 &&
+      SIZES.score * 1.1 + SIZES.name * 1.25 <= box.h;
+
     return {
       nuts_id: r.nuts_id,
       name: r.name,
       pct,
-      band: severityBand(pct),
+      band,
       path: view.paths[r.nuts_id],
-      centroid: view.centroids[r.nuts_id],
+      centroid,
+      scoreText,
+      showScore,
+      showName,
     };
   });
 
-const tableIds = new Set(regions.map((r) => r.nuts_id));
+// A dark fill needs light text over it, and vice versa. Only the two deepest
+// bands are dark enough to flip.
+const isDark = (band: string) => band === "d4" || band === "d3";
+
+const byId = new Map(visibleRegions.map((r) => [r.nuts_id, r]));
+const orderedIds = features.map((f) => f.nuts_id);
 
 // Percentiles as integers (x10) keep the inline payload to ~33 KB gzipped for
 // the full 1217-week archive — small enough to ship with the page rather than
 // fetch, so scrubbing never waits on the network.
-const byId = new Map(visibleRegions.map((r) => [r.nuts_id, r]));
-const playbackIds = features.map((f) => f.nuts_id);
-const playback = timelapse
-  ? {
-      weeks: ts.weeks,
-      locale: INTL_TAG[lang],
-      labels: { play: str.timelapsePlay, pause: str.timelapsePause, replay: str.timelapseReplay },
-      v: ts.weeks.map((wk) =>
-        playbackIds.map((id) => {
-          const p = byId.get(id)?.weeks[wk]?.mean_percentile;
-          return typeof p === "number" ? Math.round(p * 10) : -1;
-        })
-      ),
-    }
-  : null;
-const bands = ["d4", "d3", "d2", "d1", "d0", "normal"] as const;
-const bandRanges: Record<string, string> = {
-  d4: "≤ 2",
-  d3: "≤ 5",
-  d2: "≤ 10",
-  d1: "≤ 20",
-  d0: "≤ 30",
-  normal: "> 30",
-};
----
-<figure class="region-map">
-  <svg viewBox={view.viewBox} role="img" aria-label={str.mapHeading(formatDate(lang, w))}>
-    {features.map((f) => (
-      <path
-        data-nuts={f.nuts_id}
-        d={f.path}
-        fill={f.pct === null ? "#e7e1d3" : bandColor(f.band)}
-        stroke="#fff"
-        stroke-width="1"
-      >
-        <title>{f.name} — {f.pct === null ? "—" : formatNumber(lang, f.pct)} · {str.bands[f.band]}</title>
-      </path>
-    ))}
-    {showLabels && features.filter((f) => tableIds.has(f.nuts_id) && f.centroid).map((f) => (
-      <text
-        x={f.centroid!.x}
-        y={f.centroid!.y}
-        text-anchor="middle"
-        dominant-baseline="middle"
-        font-size="11"
-        font-family="ui-sans-serif, system-ui, sans-serif"
-        font-weight="600"
-        fill={["d4", "d3"].includes(f.band) ? "#fff" : "#0c1a14"}
-        stroke={["d4", "d3"].includes(f.band) ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.6)"}
-        stroke-width="0.4"
-        paint-order="stroke"
-      >
-        {f.nuts_id}
-      </text>
-    ))}
-  </svg>
-  <figcaption>
-    <span class="legend">
-      {bands.map((b) => (
-        <span class="legend-item">
-          <span class="swatch" style={`background:${bandColor(b)};`}></span>
-          <span class="legend-label">
-            {str.bands[b]} <em>({bandRanges[b]})</em>
-          </span>
-        </span>
-      ))}
-    </span>
-    <span class="caption-source" data-tl-caption>{str.legendCaption(formatDate(lang, w))}</span>
-  </figcaption>
+const values = ts.weeks.map((wk) =>
+  orderedIds.map((id) => {
+    const p = byId.get(id)?.weeks[wk]?.mean_percentile;
+    return typeof p === "number" ? Math.round(p * 10) : -1;
+  })
+);
 
-  {playback && (
-    <div class="tl" data-timelapse>
-      <div class="tl-row">
-        <button type="button" class="tl-play" data-tl-play aria-describedby="tl-hint">
-          {str.timelapsePlay}
-        </button>
-        <input
-          type="range"
-          class="tl-scrub"
-          min="0"
-          max={playback.weeks.length - 1}
-          value={playback.weeks.length - 1}
-          step="1"
-          data-tl-scrub
-          aria-label={str.timelapseScrub}
-        />
+const payload = {
+  weeks: ts.weeks,
+  locale: INTL_TAG[lang],
+  timelapse,
+  labels: {
+    play: str.timelapsePlay,
+    pause: str.timelapsePause,
+    replay: str.timelapseReplay,
+    score: str.table.score,
+    streak: str.table.weeksBelow,
+    pin: str.pinHint,
+    pinned: str.pinnedHint,
+  },
+  bands: str.bands,
+  regions: features.map((f) => ({
+    id: f.nuts_id,
+    name: f.name,
+    label: f.showScore,
+    name_on: f.showName,
+  })),
+  v: values,
+};
+
+// --- scrub ribbon: the national average across the whole archive -----------
+// Consecutive weeks in the same band collapse to one rect, which takes 1217
+// bars down to a couple of hundred without changing a pixel.
+const national = weeklySeries(ts, focus === "ALL" ? undefined : focus);
+const runs: { start: number; len: number; fill: string }[] = [];
+national.forEach((v, i) => {
+  const fill = typeof v === "number" ? bandColor(severityBand(v)) : "#e0dccf";
+  const prev = runs[runs.length - 1];
+  if (prev && prev.fill === fill) prev.len++;
+  else runs.push({ start: i, len: 1, fill });
+});
+
+const firstYear = Number(ts.weeks[0].slice(0, 4));
+const lastYear = Number(ts.weeks[ts.weeks.length - 1].slice(0, 4));
+// The year actually sitting at the midpoint of the track, not the midpoint of
+// the two end years — the archive does not start in January.
+const midYear = ts.weeks[Math.floor((ts.weeks.length - 1) / 2)].slice(0, 4);
+const Heading = headingLevel;
+---
+<div class="map-block" data-map-block>
+  {heading && (
+    <div class="section-head">
+      <Heading data-tl-datetext>{heading}</Heading>
+    </div>
+  )}
+
+  <figure class="map-figure">
+    <div class="map-frame">
+      <svg
+        class={`map-svg map-svg--${focus === "ALL" ? "all" : "country"}`}
+        viewBox={view.viewBox}
+        role="img"
+        aria-label={str.mapHeading(formatDate(lang, w))}
+        data-map
+      >
+        {features.map((f) => (
+          <path
+            class="map-region"
+            data-nuts={f.nuts_id}
+            d={f.path}
+            fill={f.pct === null ? "#e0dccf" : bandColor(f.band)}
+            tabindex="0"
+            role="button"
+            aria-label={`${f.name} — ${f.pct === null ? "—" : formatNumber(lang, f.pct)} · ${str.bands[f.band]}`}
+          >
+            {/* Removed by the enhancement script, which replaces the native
+                tooltip with the readout card. Kept in the markup so a
+                no-JavaScript reader still gets a value on hover. */}
+            <title>{f.name} — {f.pct === null ? "—" : formatNumber(lang, f.pct)} · {str.bands[f.band]}</title>
+          </path>
+        ))}
+
+        {/* One shared outline, moved to whichever region is active. Drawing a
+            second copy of all 16 paths would double 214 KB of path data. */}
+        <path class="map-outline" data-outline d="" />
+
+        {features.filter((f) => f.showName).map((f) => (
+          <text
+            class={`map-name ${isDark(f.band) ? "on-dark" : "on-light"}`}
+            data-name-for={f.nuts_id}
+            x={f.centroid!.x}
+            y={f.centroid!.y - SIZES.score * 0.62}
+            text-anchor="middle"
+            font-size={SIZES.name}
+          >{f.name}</text>
+        ))}
+
+        {features.filter((f) => f.showScore).map((f) => (
+          <text
+            class={`map-label ${isDark(f.band) ? "on-dark" : "on-light"}`}
+            data-score-for={f.nuts_id}
+            x={f.centroid!.x}
+            y={f.centroid!.y + (f.showName ? SIZES.score * 0.5 : SIZES.score * 0.34)}
+            text-anchor="middle"
+            font-size={SIZES.score}
+          >{f.scoreText}</text>
+        ))}
+      </svg>
+
+      <div class="readout" data-readout hidden aria-hidden="true"></div>
+    </div>
+
+    <figcaption>
+      <span class="legend">
+        {(["d4", "d3", "d2", "d1", "d0", "normal"] as const).map((b) => (
+          <span class="legend-item">
+            <span class="swatch" style={`background:${bandColor(b)};`}></span>
+            {str.bands[b]} <em>({{ d4: "≤ 2", d3: "≤ 5", d2: "≤ 10", d1: "≤ 20", d0: "≤ 30", normal: "> 30" }[b]})</em>
+          </span>
+        ))}
+      </span>
+      <span class="caption-source" data-tl-datetext>{str.legendCaption(formatDate(lang, w))}</span>
+    </figcaption>
+  </figure>
+
+  {timelapse && (
+    <div class="transport" data-timelapse>
+      <button type="button" class="tl-play" data-tl-play aria-label={str.timelapsePlay} title={str.timelapsePlay}>
+        <svg class="icon-play" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M6.5 3.8 16 10 6.5 16.2Z" fill="currentColor" />
+        </svg>
+        <svg class="icon-pause" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M5.6 3.6h3.2v12.8H5.6zM11.2 3.6h3.2v12.8h-3.2z" fill="currentColor" />
+        </svg>
+      </button>
+
+      <div class="tl-readout">
+        <span class="tl-year" data-tl-year>{w.slice(0, 4)}</span>
+        <span class="tl-date" data-tl-fulldate>{formatDate(lang, w)}</span>
         <label class="tl-speed">
-          <span class="tl-speed-label">{str.timelapseSpeed}</span>
+          <span>{str.timelapseSpeed}</span>
           <select data-tl-speed>
             <option value="0.5">0.5×</option>
             <option value="1" selected>1×</option>
@@ -153,100 +259,347 @@ const bandRanges: Record<string, string> = {
           </select>
         </label>
       </div>
-      <p class="tl-hint" id="tl-hint">{str.timelapseHint(Number(playback.weeks[0].slice(0, 4)))}</p>
-      <script type="application/json" data-tl-json set:html={JSON.stringify(playback)}></script>
+
+      <div class="tl-track">
+        <svg
+          class="tl-ribbon"
+          viewBox={`0 0 ${ts.weeks.length} 10`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {runs.map((r) => (
+            <rect x={r.start} y="0" width={r.len} height="10" fill={r.fill} />
+          ))}
+        </svg>
+        <input
+          type="range"
+          class="tl-scrub"
+          min="0"
+          max={ts.weeks.length - 1}
+          value={ts.weeks.length - 1}
+          step="1"
+          data-tl-scrub
+          aria-label={str.timelapseScrub}
+        />
+        <div class="tl-scale" aria-hidden="true">
+          <span>{firstYear}</span><span>{midYear}</span><span>{lastYear}</span>
+        </div>
+      </div>
+
+      <p class="tl-hint">
+        {transportLead && <strong class="tl-lead">{transportLead}</strong>}
+        {str.timelapseHint(firstYear)}
+      </p>
     </div>
   )}
-</figure>
+
+  <script type="application/json" data-map-json set:html={JSON.stringify(payload)}></script>
+</div>
 
 <style>
-  .region-map { margin: 1.2rem 0 1.6rem; }
-  .region-map svg {
-    width: 100%;
-    height: auto;
-    background: #f0ebde;
-    border: 1px solid var(--line);
-    display: block;
+  .map-block { margin: 0; }
+  .transport { margin-top: 1rem; }
+
+  /* Font sizes on SVG text are user units, so they scale with the viewBox.
+     These bumps keep labels legible when the same 1000-unit map is drawn into
+     a narrow column. Below 34rem nothing is drawn: at that scale a fitted
+     label would be 6px, and the colour field plus tap-to-read is the better
+     map anyway. */
+  @media (max-width: 62rem) {
+    .map-svg--all .map-label { font-size: 30px; }
+    .map-svg--all .map-name { display: none; }
+    .map-svg--country .map-label { font-size: 24px; }
+    .map-svg--country .map-name { font-size: 18px; }
   }
-  .region-map figcaption {
-    margin-top: 0.6rem;
-    font-size: 0.78rem;
-    color: var(--ink-soft);
+  @media (max-width: 34rem) {
+    .map-label, .map-name { display: none; }
   }
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem 1rem;
-    margin-bottom: 0.3rem;
-  }
-  .legend-item { display: inline-flex; align-items: center; gap: 0.35rem; }
-  .swatch {
-    display: inline-block;
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 2px;
-    border: 1px solid rgba(0,0,0,0.1);
-  }
-  .legend-label em {
-    color: var(--ink-soft);
-    font-style: normal;
-    font-feature-settings: "tnum";
-  }
-  .caption-source { display: block; }
 </style>
+
 <script>
-  // Playback is progressive enhancement: without this the map still shows the
-  // latest week, server-rendered. Colours must match severityBand()/bandColor()
-  // in src/lib/data.ts.
-  const BANDS: [number, string][] = [
-    [2, "#6e1f1f"], [5, "#b04a2c"], [10, "#d28f3a"], [20, "#e0c068"], [30, "#a8aa6c"],
+  // Progressive enhancement. Without this the map still shows the latest week,
+  // server-rendered, with native tooltips and no playback.
+  //
+  // Colours must match severityBand()/bandColor() in src/lib/data.ts and the
+  // severity tokens in public/styles.css.
+  const BANDS: [number, string, string][] = [
+    [2, "#6e1f1f", "d4"],
+    [5, "#b04a2c", "d3"],
+    [10, "#d28f3a", "d2"],
+    [20, "#e0c068", "d1"],
+    [30, "#a8aa6c", "d0"],
   ];
   const NORMAL = "#6a8e6f";
-  const NO_DATA = "#e7e1d3";
+  const NO_DATA = "#e0dccf";
+  const STREAK_THRESHOLD = 50; // tenths — the 5% mark the table also counts
   const BASE_MS = 28; // ms per week at 1x -> ~34s for the full archive
 
+  function bandOf(tenths: number): string {
+    if (tenths < 0) return "normal";
+    const pct = tenths / 10;
+    for (const [limit, , key] of BANDS) if (pct <= limit) return key;
+    return "normal";
+  }
   function colour(tenths: number): string {
     if (tenths < 0) return NO_DATA;
     const pct = tenths / 10;
     for (const [limit, hex] of BANDS) if (pct <= limit) return hex;
     return NORMAL;
   }
+  const isDark = (band: string) => band === "d4" || band === "d3";
 
-  for (const root of document.querySelectorAll<HTMLElement>("[data-timelapse]")) {
-    const figure = root.closest("figure");
-    const json = root.querySelector<HTMLScriptElement>("[data-tl-json]");
-    const play = root.querySelector<HTMLButtonElement>("[data-tl-play]");
-    const scrub = root.querySelector<HTMLInputElement>("[data-tl-scrub]");
-    const speedSel = root.querySelector<HTMLSelectElement>("[data-tl-speed]");
-    const caption = figure?.querySelector<HTMLElement>("[data-tl-caption]");
-    if (!figure || !json || !play || !scrub) continue;
+  for (const block of document.querySelectorAll<HTMLElement>("[data-map-block]")) {
+    const json = block.querySelector<HTMLScriptElement>("[data-map-json]");
+    const svg = block.querySelector<SVGSVGElement>("[data-map]");
+    const card = block.querySelector<HTMLElement>("[data-readout]");
+    const frame = svg?.closest<HTMLElement>(".map-frame");
+    if (!json || !svg || !card || !frame) continue;
 
     const data = JSON.parse(json.textContent || "{}");
-    const paths = Array.from(figure.querySelectorAll<SVGPathElement>("path[data-nuts]"));
+    const paths = Array.from(svg.querySelectorAll<SVGPathElement>("path[data-nuts]"));
+    const outline = svg.querySelector<SVGPathElement>("[data-outline]");
     const last = data.weeks.length - 1;
-    const fmt = new Intl.DateTimeFormat(data.locale, {
+
+    const dateFmt = new Intl.DateTimeFormat(data.locale, {
       year: "numeric", month: "long", day: "numeric", timeZone: "UTC",
     });
-    // Reuse the server-rendered caption's wording, swapping only the date.
-    const template = caption?.textContent?.trim() ?? "";
-    const renderedDate = fmt.format(new Date(data.weeks[last] + "T00:00:00Z"));
+    const scoreFmt = (v: number) =>
+      new Intl.NumberFormat(data.locale, {
+        minimumFractionDigits: v < 10 ? 1 : 0,
+        maximumFractionDigits: v < 10 ? 1 : 0,
+      }).format(v);
+
+    // Native <title> tooltips would fight the readout card — same information,
+    // a second later, in a box we cannot style. The text becomes the path's
+    // accessible name instead, so screen readers lose nothing.
+    for (const p of paths) {
+      const title = p.querySelector("title");
+      if (title) title.remove();
+    }
+    // Signals to CSS that focus now has a custom indicator, so the browser
+    // ring can stand down. Without this script it stays.
+    svg.setAttribute("data-enhanced", "");
+
+    const index = new Map<string, number>();
+    data.regions.forEach((r: any, n: number) => index.set(r.id, n));
 
     let i = last;
+
+    // ---------------------------------------------------------------- card
+    let pinned: string | null = null;
+
+    function streakAt(col: number, week: number): number {
+      let n = 0;
+      for (let k = week; k >= 0; k--) {
+        const v = data.v[k][col];
+        if (v < 0 || v > STREAK_THRESHOLD) break;
+        n++;
+      }
+      return n;
+    }
+
+    function cardHtml(id: string): string {
+      const col = index.get(id)!;
+      const region = data.regions[col];
+      const tenths = data.v[i][col];
+      const has = tenths >= 0;
+      const band = bandOf(tenths);
+      const streak = has ? streakAt(col, i) : 0;
+      const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]!));
+      return [
+        `<p class="readout-name">${esc(region.name)}</p>`,
+        `<p class="readout-sub">${esc(id)} · ${esc(dateFmt.format(new Date(data.weeks[i] + "T00:00:00Z")))}</p>`,
+        `<div class="readout-score">`,
+        `<span class="readout-value" style="color:${colour(tenths)}">${has ? scoreFmt(tenths / 10) : "—"}</span>`,
+        `<span class="readout-of">/100</span>`,
+        `</div>`,
+        `<span class="band ${band}">${esc(data.bands[band])}</span>`,
+        streak > 0
+          ? `<dl class="readout-rows"><dt>${esc(data.labels.streak)}</dt><dd>${streak}</dd></dl>`
+          : "",
+        `<span class="readout-pin">${esc(pinned === id ? data.labels.pinned : data.labels.pin)}</span>`,
+      ].join("");
+    }
+
+    function placeCard(clientX: number, clientY: number) {
+      const box = frame.getBoundingClientRect();
+      const cw = card.offsetWidth;
+      const ch = card.offsetHeight;
+      let x = clientX - box.left + 14;
+      let y = clientY - box.top + 14;
+      if (x + cw > box.width - 6) x = clientX - box.left - cw - 14;
+      if (y + ch > box.height - 6) y = clientY - box.top - ch - 14;
+      card.style.left = `${Math.max(6, Math.min(x, box.width - cw - 6))}px`;
+      card.style.top = `${Math.max(6, Math.min(y, box.height - ch - 6))}px`;
+    }
+
+    function showCard(id: string, clientX: number, clientY: number) {
+      card.hidden = false;
+      card.innerHTML = cardHtml(id);
+      card.setAttribute("data-show", "");
+      placeCard(clientX, clientY);
+      svg.setAttribute("data-active", "");
+      for (const p of paths) {
+        const on = p.dataset.nuts === id;
+        if (on) p.setAttribute("data-on", "");
+        else p.removeAttribute("data-on");
+        if (on && outline) {
+          outline.setAttribute("d", p.getAttribute("d") || "");
+          outline.setAttribute("data-on", "");
+        }
+      }
+      // Keep any linked table row in step with the map.
+      for (const row of document.querySelectorAll<HTMLElement>("[data-row-nuts]")) {
+        row.toggleAttribute("data-on", row.dataset.rowNuts === id);
+      }
+    }
+
+    function hideCard() {
+      if (pinned) return;
+      card.removeAttribute("data-show");
+      card.hidden = true;
+      svg.removeAttribute("data-active");
+      outline?.removeAttribute("data-on");
+      for (const p of paths) p.removeAttribute("data-on");
+      for (const row of document.querySelectorAll<HTMLElement>("[data-row-nuts]")) {
+        row.removeAttribute("data-on");
+      }
+    }
+
+    function centreOf(el: SVGGraphicsElement) {
+      const b = el.getBoundingClientRect();
+      return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+    }
+
+    for (const p of paths) {
+      const id = p.dataset.nuts!;
+      p.addEventListener("pointerenter", (e) => {
+        if (pinned) return;
+        showCard(id, e.clientX, e.clientY);
+      });
+      p.addEventListener("pointermove", (e) => {
+        if (pinned) return;
+        placeCard(e.clientX, e.clientY);
+      });
+      p.addEventListener("pointerleave", () => hideCard());
+      p.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (pinned === id) {
+          pinned = null;
+          card.removeAttribute("data-pinned");
+          hideCard();
+        } else {
+          pinned = null;
+          const c = centreOf(p);
+          showCard(id, c.x, c.y);
+          pinned = id;
+          card.setAttribute("data-pinned", "");
+          card.innerHTML = cardHtml(id);
+        }
+      });
+      p.addEventListener("focus", () => {
+        if (pinned && pinned !== id) return;
+        const c = centreOf(p);
+        showCard(id, c.x, c.y);
+      });
+      p.addEventListener("blur", () => hideCard());
+      p.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          p.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        }
+      });
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && pinned) {
+        pinned = null;
+        card.removeAttribute("data-pinned");
+        hideCard();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!pinned) return;
+      if (card.contains(e.target as Node)) return;
+      pinned = null;
+      card.removeAttribute("data-pinned");
+      hideCard();
+    });
+
+    // Table rows drive the map too, so the two readings of the same week are
+    // visibly the same data.
+    for (const row of document.querySelectorAll<HTMLElement>("[data-row-nuts]")) {
+      const id = row.dataset.rowNuts!;
+      if (!index.has(id)) continue;
+      row.addEventListener("pointerenter", () => {
+        if (pinned) return;
+        const p = paths.find((q) => q.dataset.nuts === id);
+        if (!p) return;
+        const c = centreOf(p);
+        showCard(id, c.x, c.y);
+      });
+      row.addEventListener("pointerleave", () => hideCard());
+    }
+
+    // ------------------------------------------------------------ playback
+    if (!data.timelapse) continue;
+
+    const transport = block.querySelector<HTMLElement>("[data-timelapse]");
+    const play = transport?.querySelector<HTMLButtonElement>("[data-tl-play]");
+    const scrub = transport?.querySelector<HTMLInputElement>("[data-tl-scrub]");
+    const speedSel = transport?.querySelector<HTMLSelectElement>("[data-tl-speed]");
+    const yearOut = transport?.querySelector<HTMLElement>("[data-tl-year]");
+    const dateOut = transport?.querySelector<HTMLElement>("[data-tl-fulldate]");
+    if (!transport || !play || !scrub) continue;
+
+    // Reuse each dated string's own wording, swapping only the date, so a
+    // heading and a caption never disagree with the map they sit beside.
+    const dated = Array.from(block.querySelectorAll<HTMLElement>("[data-tl-datetext]")).map((el) => ({
+      el,
+      template: el.textContent ?? "",
+    }));
+    const renderedDate = dateFmt.format(new Date(data.weeks[last] + "T00:00:00Z"));
+
+    const scoreLabels = new Map<string, SVGTextElement>();
+    for (const el of svg.querySelectorAll<SVGTextElement>("[data-score-for]")) {
+      scoreLabels.set(el.dataset.scoreFor!, el);
+    }
+    const nameLabels = new Map<string, SVGTextElement>();
+    for (const el of svg.querySelectorAll<SVGTextElement>("[data-name-for]")) {
+      nameLabels.set(el.dataset.nameFor!, el);
+    }
+
     let speed = 1;
     let raf: number | null = null;
     let prev = 0;
     let carry = 0; // ms of playback time not yet spent on a whole week
 
-    function draw(index: number) {
-      const row = data.v[index];
-      for (let n = 0; n < paths.length; n++) paths[n].setAttribute("fill", colour(row[n]));
-      if (caption && template) {
-        caption.textContent = template.replace(
-          renderedDate,
-          fmt.format(new Date(data.weeks[index] + "T00:00:00Z"))
-        );
+    function draw(week: number) {
+      const row = data.v[week];
+      for (let n = 0; n < paths.length; n++) {
+        const tenths = row[n];
+        paths[n].setAttribute("fill", colour(tenths));
+        const id = data.regions[n].id;
+        const dark = isDark(bandOf(tenths));
+        const score = scoreLabels.get(id);
+        if (score) {
+          score.textContent = tenths < 0 ? "" : scoreFmt(tenths / 10);
+          score.classList.toggle("on-dark", dark);
+          score.classList.toggle("on-light", !dark);
+        }
+        const name = nameLabels.get(id);
+        if (name) {
+          name.classList.toggle("on-dark", dark);
+          name.classList.toggle("on-light", !dark);
+        }
       }
-      scrub.value = String(index);
+
+      const stamp = dateFmt.format(new Date(data.weeks[week] + "T00:00:00Z"));
+      for (const d of dated) d.el.textContent = d.template.replace(renderedDate, stamp);
+      if (yearOut) yearOut.textContent = data.weeks[week].slice(0, 4);
+      if (dateOut) dateOut.textContent = stamp;
+      scrub.value = String(week);
+      if (pinned) card.innerHTML = cardHtml(pinned);
     }
 
     function stop() {
@@ -254,7 +607,9 @@ const bandRanges: Record<string, string> = {
       raf = null;
       prev = 0;
       carry = 0;
-      play.textContent = i >= last ? data.labels.replay : data.labels.play;
+      const label = i >= last ? data.labels.replay : data.labels.play;
+      play.setAttribute("aria-label", label);
+      play.setAttribute("title", label);
       play.removeAttribute("data-playing");
     }
 
@@ -281,7 +636,8 @@ const bandRanges: Record<string, string> = {
     function start() {
       // Starting from the end means replaying, not sitting still.
       if (i >= last) { i = 0; draw(i); }
-      play.textContent = data.labels.pause;
+      play.setAttribute("aria-label", data.labels.pause);
+      play.setAttribute("title", data.labels.pause);
       play.setAttribute("data-playing", "");
       prev = 0;
       carry = 0;

@@ -201,3 +201,90 @@ find.
   the rendered width before re-joining any line.
 - GitHub disables scheduled workflows after 60 days of repo inactivity.
   Unconfirmed whether the bot's own commits reset that timer.
+
+## 2026-08-01 (fourth) — Full design pass
+
+Frontend only. No pipeline, data, workflow or docs file changed — verified by
+diff, not by memory. Direction chosen by the user: keep the warm-paper identity
+everywhere (no dark mode), make the hero itself the frame worth capturing for
+reels rather than building a separate cinema mode, and take interactivity all
+the way to hover cards, pinning and chart scrubbing.
+
+- **Completed:**
+  - `public/styles.css` rewritten as a design system: three paper depths, a
+    serif/sans pair from system stacks (serif = prose, sans = every number,
+    axis, label and control — no webfont, so no extra request and no layout
+    shift), a fluid type scale, and a CSS-grid layout with `content` / `wide` /
+    `full` tracks.
+  - **The layout grid is the real fix.** Everything used to live in a 78ch
+    column, so on a 1440px screen the map — the whole point of the site —
+    rendered about 330px wide. It is now ~720px in a full-bleed hero.
+  - Hero: headline and intro left, map right, the `11/16` stat and the claim
+    sentence bottom-left, all inside one 1440×950 frame. Narrow the window and
+    it stacks to headline → map → number, which is the vertical capture.
+  - Every heading on the page, hero included, now starts on one left edge
+    (`--wide`); individual graphics cap themselves at `--graphic` below it.
+  - Map labels are fitted at build time against each region's path bounding
+    box via the new `pathBBox()` in `lib/data.ts`. Combined map carries scores
+    (which tick during playback); country maps carry name + score.
+  - Native `<title>` tooltips are removed on JS init and replaced by a styled
+    readout card — name, score, band pill, weeks-in-a-row — with click-to-pin,
+    Esc to release, keyboard focus, and table-row ↔ map-region linking. Trend
+    line and heatmap got the same card.
+  - The scrub track is now a 23-year ribbon of the national average, built
+    server-side by collapsing consecutive same-band weeks into runs.
+  - Fixed on the way: the two-line "abnormally dry" pill blob, "few cells"
+    breaking mid-phrase, near-invisible sparklines, trend end labels
+    overprinting each other, and the Hungary series line striking through the
+    "an ordinary year" annotation.
+  - **Fixed a pre-existing bug**: the country-page map heading read "week of
+    25 May 2026" while the map showed 2009. The heading now lives inside
+    `RegionMap` so playback can keep it in step. The *table* heading
+    deliberately does not track, because the table does not scrub.
+
+- **Verified:**
+  - Drove real Chrome over CDP (not screenshots): hover, pin, Esc, keyboard
+    focus, play, pause, trend and heatmap readouts all work in EN, RO and HU.
+  - Every value the card computes client-side was recomputed independently
+    from `timeseries.json`: Budapest 0.4 with a 48-week streak, Nyugat-Dunántúl
+    0.9 / 70 weeks, the May 2012 trend point (RO 24.2 → "24", HU 16.5 → "17"),
+    the 2022-March heatmap cell (7.8 both ways).
+  - Zero console errors and zero horizontal overflow across 8 pages × 5 widths
+    (390 / 768 / 1024 / 1440 / 1920), excluding the deliberate scrollers.
+  - With JavaScript disabled: all 16 regions, 15 score labels, legends and 305
+    native `<title>` tooltips still render, transport markup present.
+  - Label fitting behaves as designed: HU11 Budapest is the only region on the
+    combined map too small for a score, RO32 the only one on the Romania map
+    too small for a name.
+  - Clean rebuild from an empty `dist`, 10 routes, 101 internal links and
+    assets checked, **zero broken**; hreflang still EN-only on methodology.
+
+- **Blockers:** unchanged and slightly enlarged — see below.
+
+- **Next:** native-review the RO/HU copy, now including four new UI strings.
+
+### Landmines from this session
+
+- **`astro check` has never run on this repo.** `package.json` declares the
+  script but `@astrojs/check` and `typescript` are not installed, and `astro
+  build` does not type-check — it only strips types. Runtime behaviour is
+  browser-verified; the type check is still owed. Installing it adds two dev
+  dependencies and touches `package-lock.json`, so it wants to be its own
+  change.
+- **Do not verify responsive layout with Chrome's `--window-size` CLI
+  screenshot.** It clamps the window to a minimum width but writes the image at
+  the width you asked for, so the right side is cropped and the page looks
+  catastrophically broken on mobile when nothing is wrong. Use CDP
+  `Emulation.setDeviceMetricsOverride` and confirm with
+  `documentElement.scrollWidth > clientWidth`.
+- `Page.captureScreenshot {captureBeyondViewport: true}` does not trigger
+  `loading="lazy"`, so the NASA mirror renders as a blank white box in
+  full-page captures. Scroll it into view and check `naturalWidth` before
+  calling that a bug.
+- **The severity hex values now live in four places** and must move together:
+  `lib/data.ts` `bandColor()`, the `BANDS` table in `RegionMap.astro`'s client
+  script, the severity tokens in `public/styles.css`, and
+  `pipeline/share_card.py`. `SeasonHeatmap.astro` maps fill → band key by
+  reverse lookup, so it inherits from the first.
+- The `Sparkline` gradient id is a hash of its own values, not a random id — a
+  random one would make every build emit a different page for identical data.

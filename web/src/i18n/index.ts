@@ -75,8 +75,13 @@ interface Strings {
   countryDescription: (country: string) => string;
   countryName: Record<"RO" | "HU", string>;
 
-  nav: { home: string; romania: string; hungary: string; methodology: string };
+  nav: { home: string; romania: string; hungary: string; methodology: string; sections: string };
   langLabel: string;
+  skipToContent: string;
+  /** Readout-card affordances. Kept to two strings on purpose: the card's
+   *  content is region name, score and band, all of which already exist. */
+  pinHint: string;
+  pinnedHint: string;
 
   h1: string;
   intro: (startYear: number) => string;
@@ -146,8 +151,11 @@ const en: Strings = {
   countryDescription: (c) => `Groundwater levels across ${c}, region by region, measured weekly by NASA satellites.`,
   countryName: { RO: "Romania", HU: "Hungary" },
 
-  nav: { home: "Home", romania: "Romania", hungary: "Hungary", methodology: "Methodology" },
+  nav: { home: "Home", romania: "Romania", hungary: "Hungary", methodology: "Methodology", sections: "Sections" },
   langLabel: "Language",
+  skipToContent: "Skip to content",
+  pinHint: "Click to keep open",
+  pinnedHint: "Esc to close",
 
   h1: "Europe's hidden drought",
   intro: (startYear) =>
@@ -245,8 +253,11 @@ const ro: Strings = {
   countryDescription: (c) => `Nivelul apei subterane în ${c}, regiune cu regiune, măsurat săptămânal de sateliții NASA.`,
   countryName: { RO: "România", HU: "Ungaria" },
 
-  nav: { home: "Acasă", romania: "România", hungary: "Ungaria", methodology: "Metodologie" },
+  nav: { home: "Acasă", romania: "România", hungary: "Ungaria", methodology: "Metodologie", sections: "Secțiuni" },
   langLabel: "Limbă",
+  skipToContent: "Sari la conținut",
+  pinHint: "Clic pentru a fixa",
+  pinnedHint: "Esc pentru a închide",
 
   h1: "Seceta ascunsă a Europei",
   intro: (startYear) =>
@@ -344,8 +355,11 @@ const hu: Strings = {
   countryDescription: (c) => `A felszín alatti vízkészlet ${c} régióiban, a NASA műholdjainak heti mérései alapján.`,
   countryName: { RO: "Románia", HU: "Magyarország" },
 
-  nav: { home: "Főoldal", romania: "Románia", hungary: "Magyarország", methodology: "Módszertan" },
+  nav: { home: "Főoldal", romania: "Románia", hungary: "Magyarország", methodology: "Módszertan", sections: "Rovatok" },
   langLabel: "Nyelv",
+  skipToContent: "Ugrás a tartalomra",
+  pinHint: "Kattintson a rögzítéshez",
+  pinnedHint: "Esc a bezáráshoz",
 
   h1: "Európa rejtett aszálya",
   intro: (startYear) =>

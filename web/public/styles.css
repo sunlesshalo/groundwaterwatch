@@ -1,181 +1,1021 @@
+/* groundwaterwatch — design system
+ *
+ * One surface family: warm paper, three depths. One accent. One severity scale,
+ * which is the only place colour carries meaning, and it is shared with the map,
+ * the heatmap, the table pills and the Python share card. Do not redefine the
+ * severity hex values here without changing pipeline/share_card.py and the
+ * BANDS table in RegionMap.astro to match.
+ *
+ * Type is a serif/sans pair from system stacks — no webfont, so no extra
+ * request and no layout shift. Serif carries prose (the credibility voice);
+ * sans carries every number, label, axis and control (the instrument voice).
+ */
+
 :root {
-  --ink: #0c1a14;
-  --ink-soft: #4a5953;
+  /* Surfaces, lightest to deepest */
   --paper: #f7f4ec;
-  --line: #d4cdba;
+  --paper-raised: #fdfbf5;
+  --paper-band: #f2ede1;
+  --paper-sunk: #ece5d4;
+
+  /* Ink */
+  --ink: #14231c;
+  --ink-soft: #53615a;
+  --ink-faint: #8b938c;
+
+  /* Rules */
+  --line: #ded5c2;
+  --line-strong: #c8bda3;
+
+  /* Accent */
   --accent: #b04a2c;
-  --extreme: #6e1f1f;
-  --severe: #b04a2c;
-  --moderate: #d28f3a;
-  --mild: #c5b16a;
-  --normal: #6a8e6f;
-  --max-w: 78ch;
+  --accent-deep: #8a3720;
+
+  /* Severity — semantic, shared with the map, heatmap, pills and share card */
+  --extreme: #6e1f1f;   /* d4 exceptional */
+  --severe: #b04a2c;    /* d3 extreme */
+  --moderate: #d28f3a;  /* d2 severe */
+  --mild: #e0c068;      /* d1 moderate */
+  --dry: #a8aa6c;       /* d0 abnormally dry */
+  --normal: #6a8e6f;    /* near normal */
+
+  /* Series identity — categorical, deliberately NOT the severity hues */
+  --series-ro: #2a78d6;
+  --series-hu: #eb6834;
+
+  /* Type */
+  --font-serif: ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* Measure. `wide` is the shared left edge for every heading on the page,
+   * hero included, so nothing is a few pixels out from the thing above it.
+   * Individual graphics cap themselves below it where full width would be
+   * too much. */
+  --content: 40rem;
+  --wide: 74rem;
+  --graphic: 64rem;
+  --gutter: clamp(1.1rem, 4vw, 2.5rem);
+
+  /* Rhythm */
+  --step: clamp(2.6rem, 6vw, 4.5rem);
+
+  --radius: 4px;
+  --radius-lg: 10px;
+  --shadow-card: 0 1px 2px rgba(20, 35, 28, 0.05), 0 8px 24px -12px rgba(20, 35, 28, 0.18);
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+
 body {
-  font: 16px/1.55 ui-serif, Georgia, "Times New Roman", serif;
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.09rem);
+  line-height: 1.6;
   color: var(--ink);
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.site-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 1.4rem clamp(1rem, 4vw, 2.5rem);
-  border-bottom: 1px solid var(--line);
-}
-.site-header .brand {
-  font-weight: 600;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  color: var(--ink);
-  text-decoration: none;
-}
-.site-header nav { display: flex; gap: 1.4rem; font-size: 0.92rem; }
-.site-header nav a { color: var(--ink-soft); text-decoration: none; }
-.site-header nav a:hover { color: var(--ink); }
+::selection { background: rgba(176, 74, 44, 0.18); }
 
-main {
-  max-width: var(--max-w);
-  margin: 0 auto;
-  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 2.5rem) 4rem;
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
-main.wide { max-width: 100%; padding-left: 0; padding-right: 0; }
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 50;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.7rem 1.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+.skip-link:focus { left: 0.6rem; top: 0.6rem; }
+
+/* ---------------------------------------------------------------- layout
+ * A three-track grid. Children default to the prose column; anything that is
+ * a data graphic opts up to `wide`, and the hero opts all the way out to
+ * `full`. This is what lets the map be the size of the thing it depicts
+ * instead of the size of a paragraph.
+ */
+.wrap {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(var(--gutter), 1fr)
+    [wide-start] minmax(0, calc((var(--wide) - var(--content)) / 2))
+    [content-start] min(var(--content), calc(100% - var(--gutter) * 2)) [content-end]
+    minmax(0, calc((var(--wide) - var(--content)) / 2)) [wide-end]
+    minmax(var(--gutter), 1fr) [full-end];
+}
+.wrap > * { grid-column: content; }
+.u-wide { grid-column: wide; }
+.u-full { grid-column: full; }
+
+main { padding-bottom: 5rem; }
+
+/* ------------------------------------------------------------ typography */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
 
 h1 {
-  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-  line-height: 1.15;
-  margin: 0 0 0.6rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: clamp(2.1rem, 1.3rem + 3.6vw, 3.5rem);
+  margin: 0 0 0.7rem;
 }
-h2 { font-size: 1.35rem; margin-top: 2.4rem; margin-bottom: 0.6rem; font-weight: 600; }
-h3 { font-size: 1.05rem; margin-top: 1.6rem; font-weight: 600; }
 
-p { margin: 0 0 1rem; }
-a { color: var(--accent); }
-a:hover { text-decoration: none; }
+h2 {
+  font-size: clamp(1.45rem, 1.25rem + 0.9vw, 1.95rem);
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 1.12rem;
+  margin: 2rem 0 0.5rem;
+  font-weight: 600;
+}
+
+p { margin: 0 0 1.1rem; }
+p:last-child { margin-bottom: 0; }
+
+a { color: var(--accent); text-underline-offset: 0.16em; text-decoration-thickness: 1px; }
+a:hover { color: var(--accent-deep); }
+
+strong { font-weight: 700; }
 
 .lede {
-  font-size: 1.15rem;
+  font-size: clamp(1.1rem, 1.02rem + 0.4vw, 1.3rem);
+  line-height: 1.55;
   color: var(--ink-soft);
-  margin-bottom: 2rem;
-  line-height: 1.5;
+  margin-bottom: 1.8rem;
+  text-wrap: pretty;
 }
 
-.region-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.95rem;
-  margin: 1rem 0 1.5rem;
-}
-.region-table th, .region-table td {
-  text-align: left;
-  padding: 0.5rem 0.6rem;
-  border-bottom: 1px solid var(--line);
-}
-.region-table th { font-weight: 600; font-size: 0.85rem; color: var(--ink-soft); }
-.region-table td.num { text-align: right; font-feature-settings: "tnum"; }
-
-.band {
-  display: inline-block;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
   font-weight: 600;
-  color: white;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.7rem;
+  display: block;
 }
-.band.d4 { background: var(--extreme); }
-.band.d3 { background: var(--severe); }
-.band.d2 { background: var(--moderate); }
-.band.d1 { background: var(--mild); }
-.band.d0 { background: var(--normal); }
+
+/* A section is a heading plus its graphics, with a hairline above it so the
+ * page reads as a stack of findings rather than one long scroll.
+ *
+ * Every section occupies the wide column, so every heading starts on the same
+ * left edge whether it introduces a paragraph or a 1088px chart. Prose inside
+ * is pulled back to the reading measure — the alignment is shared, the line
+ * length is not. */
+.section { margin-top: var(--step); }
+.section > .section-head { margin-bottom: 1.1rem; }
+.section-head {
+  border-top: 1px solid var(--line);
+  padding-top: 1.1rem;
+}
+.section-head p { color: var(--ink-soft); margin: 0.4rem 0 0; }
+.section-head .eyebrow { margin-bottom: 0.5rem; }
+
+.section-head p,
+.section > p,
+.section > .findings,
+.section > .callout,
+.section > .note { max-width: var(--content); }
+
+.section > .chart-panel,
+.section > .table-scroll,
+.section > .map-block,
+.section > .card-grid { max-width: var(--graphic); }
+
+.note {
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
 
 .callout {
   border-left: 3px solid var(--accent);
-  padding: 0.4rem 0 0.4rem 1rem;
+  background: var(--paper-band);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.9rem 1.1rem;
   color: var(--ink-soft);
-  font-size: 0.95rem;
-  margin: 1.5rem 0;
+  font-size: 0.96rem;
+  margin: 2rem 0 0;
 }
 
-#map {
-  width: 100%;
-  height: 70vh;
-  min-height: 480px;
-  background: #e7e1d3;
-  border: 1px solid var(--line);
+/* -------------------------------------------------------------- chrome */
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 3vw, 2.4rem);
+  flex-wrap: wrap;
+  padding: 1rem var(--gutter);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-weight: 650;
+  font-size: 0.98rem;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  text-decoration: none;
+  margin-right: auto;
+}
+.brand:hover { color: var(--ink); }
+.brand-mark { display: block; flex: 0 0 auto; }
+
+.site-nav {
+  display: flex;
+  gap: clamp(0.9rem, 2vw, 1.5rem);
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+}
+.site-nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding-bottom: 2px;
+  border-bottom: 1.5px solid transparent;
+}
+.site-nav a:hover { color: var(--ink); border-bottom-color: var(--line-strong); }
+.site-nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+.lang-switch {
+  display: flex;
+  gap: 0.55rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  align-items: center;
+}
+.lang-switch a {
+  color: var(--ink-faint);
+  text-decoration: none;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+}
+.lang-switch a:hover { color: var(--ink); background: var(--paper-band); }
+.lang-switch a.current {
+  color: var(--ink);
+  font-weight: 650;
+  background: var(--paper-sunk);
 }
 
 .site-footer {
   border-top: 1px solid var(--line);
-  padding: 1.4rem clamp(1rem, 4vw, 2.5rem);
-  font-size: 0.85rem;
+  padding: 2rem var(--gutter) 2.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  background: var(--paper-band);
+}
+.site-footer-inner { max-width: var(--wide); margin: 0 auto; }
+.site-footer p { margin: 0; max-width: 80ch; }
+.site-footer a { color: var(--ink-soft); text-decoration-color: var(--line-strong); }
+.site-footer a:hover { color: var(--accent); }
+
+/* ---------------------------------------------------------------- hero
+ * Full-bleed band. On wide screens it is text-left / map-right; under 62rem it
+ * stacks to headline → figure → stat, which is the frame you want if you narrow
+ * the window and record it vertically.
+ */
+.hero {
+  background: var(--paper-band);
+  border-bottom: 1px solid var(--line);
+  padding: clamp(1.8rem, 4vw, 3.4rem) var(--gutter) clamp(1.8rem, 4vw, 3rem);
+}
+/* Wider than the article column: the hero is the frame someone will crop for
+ * video, and the map is the reason to look. */
+.hero-inner {
+  max-width: var(--wide);
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(1.6rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 62rem) {
+  .hero-inner {
+    grid-template-columns: minmax(19rem, 26rem) minmax(0, 1fr);
+  }
+  /* The map is taller than the headline, so the stat takes the space under it
+     and bottom-aligns with the transport. Left column: title, intro, number.
+     Right column: map. One frame, nothing floating. */
+  .hero-text { grid-column: 1; grid-row: 1; }
+  .hero-figure { grid-column: 2; grid-row: 1 / span 2; }
+  .hero-stat { grid-column: 1; grid-row: 2; align-self: end; }
+}
+
+.hero-title { margin: 0 0 1rem; }
+.hero-title::after {
+  content: "";
+  display: block;
+  width: 3.2rem;
+  height: 3px;
+  background: var(--extreme);
+  margin-top: 1rem;
+}
+.hero-intro {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.hero-figure { min-width: 0; }
+
+/* The stat is a pull-quote of the sentence beside it, not a separate claim.
+ * Never let it drift from the claim text — the number is read off the same
+ * facts. */
+.hero-stat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(0.9rem, 2.5vw, 1.6rem);
+  margin-top: 0.4rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line-strong);
+}
+.stat-figure {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 0.86;
+  text-align: center;
+}
+.stat-value {
+  display: block;
+  font-size: clamp(3.4rem, 2rem + 5.5vw, 5.4rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  color: var(--extreme);
+}
+.stat-rule {
+  display: block;
+  height: 2px;
+  background: var(--ink);
+  opacity: 0.75;
+  margin: 0.4rem 0 0.34rem;
+}
+.stat-total {
+  display: block;
+  font-size: clamp(1.1rem, 0.9rem + 0.7vw, 1.5rem);
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: -0.02em;
+}
+.hero-claim {
+  margin: 0;
+  flex: 1 1 18rem;
+  max-width: 46rem;
+  font-size: clamp(1.05rem, 0.98rem + 0.45vw, 1.3rem);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+/* Country pages get the same band without the stat column. */
+.hero.hero-compact { padding-bottom: clamp(1.4rem, 3vw, 2.2rem); }
+.hero-compact .hero-inner { display: block; max-width: var(--wide); }
+.hero-compact .hero-lede {
+  max-width: 46rem;
+  font-size: clamp(1.05rem, 1rem + 0.4vw, 1.24rem);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------- map */
+.map-figure { margin: 0; }
+.map-frame {
+  background: var(--paper-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: clamp(0.5rem, 1.5vw, 0.9rem);
+  position: relative;
+}
+.map-svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+.map-region {
+  stroke: var(--paper-raised);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: opacity 120ms ease-out;
+}
+/* With the enhancement script running, focus is shown by the outline path plus
+ * the dimmed surround plus the readout card, so the browser ring would be a
+ * third indicator on top. Without it, the ring is the only one there is —
+ * hence scoping the removal to the enhanced state rather than the element. */
+.map-region:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.map-svg[data-enhanced] .map-region:focus { outline: none; }
+/* Emphasis is by dimming the rest, not by recolouring the target — the fill is
+ * the value and must never move. */
+.map-svg[data-active] .map-region { opacity: 0.42; }
+.map-svg[data-active] .map-region[data-on] { opacity: 1; }
+.map-outline {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+  opacity: 0;
+}
+.map-outline[data-on] { opacity: 0.9; }
+
+.map-label {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 650;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke-width: 2.6;
+  stroke-linejoin: round;
+}
+.map-label.on-dark { fill: #fff; stroke: rgba(40, 12, 12, 0.32); }
+.map-label.on-light { fill: var(--ink); stroke: rgba(255, 255, 255, 0.72); }
+.map-name {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+.map-name.on-dark { fill: #fff; stroke: rgba(40, 12, 12, 0.3); }
+.map-name.on-light { fill: var(--ink-soft); stroke: rgba(255, 255, 255, 0.7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .map-region { transition: none; }
+}
+
+/* ------------------------------------------------------------ readout card
+ * One card serves the map, the trend line and the heatmap. It is positioned in
+ * page coordinates by JS and clamped to the viewport.
+ */
+.readout {
+  position: absolute;
+  z-index: 20;
+  min-width: 11rem;
+  max-width: 17rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 0.65rem 0.8rem 0.7rem;
+  font-family: var(--font-sans);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 90ms ease-out, transform 90ms ease-out;
+}
+.readout[data-show] { opacity: 1; transform: translateY(0); }
+.readout[data-pinned] { pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .readout { transition: none; }
+}
+
+.readout-name {
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 0 0 0.15rem;
+  color: var(--ink);
+}
+.readout-sub {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5rem;
+}
+.readout-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+}
+.readout-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.readout-of { font-size: 0.78rem; color: var(--ink-faint); }
+.readout-rows {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.15rem 0.7rem;
+  font-size: 0.76rem;
+}
+.readout-rows dt { color: var(--ink-faint); }
+.readout-rows dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.readout-pin {
+  display: block;
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------- legend */
+/* Six bands at 0.72rem clear one line under the hero map in English. Longer
+ * band names (hu: "a szokásosnál szárazabb") wrap to two, which is fine — the
+ * order still reads driest-first. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.75rem;
+  margin: 0.9rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
   color: var(--ink-soft);
 }
-.site-footer p { margin: 0; max-width: 90ch; }
-
-/* --- i18n additions --- */
-.headline {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--ink);
-  border-left: 3px solid var(--extreme);
-  padding-left: 0.9rem;
-  margin: 1.1rem 0 1.4rem;
+.legend-item { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+.swatch {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(20, 35, 28, 0.12);
 }
-.country-summary { padding-left: 1.1rem; }
-.country-summary li { margin-bottom: 0.45rem; }
-.lang-switch { display: flex; gap: 0.7rem; font-size: 0.82rem; }
-.lang-switch a { color: var(--ink-soft); text-decoration: none; }
-.lang-switch a.current { color: var(--ink); font-weight: 600; text-decoration: underline; }
+.legend-item em {
+  font-style: normal;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.caption-source {
+  display: block;
+  margin-top: 0.55rem;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+}
 
-/* --- timelapse playback --- */
-.tl { margin-top: 0.7rem; }
-.tl-row { display: flex; align-items: center; gap: 0.7rem; }
+/* ------------------------------------------------------------ transport
+ * The scrub track is itself a data graphic: a 23-year ribbon of the national
+ * average, so you can see where the dry years are before you drag to them.
+ */
+.transport {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.7rem 1.1rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
 .tl-play {
-  flex: 0 0 auto;
-  min-width: 6.2rem;
-  padding: 0.42rem 0.9rem;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--paper);
-  background: var(--extreme);
+  grid-row: span 2;
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 50%;
   border: none;
-  border-radius: 3px;
+  background: var(--extreme);
+  color: var(--paper);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease-out, transform 120ms ease-out;
 }
 .tl-play:hover { background: #8a2a2a; }
-.tl-play:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.tl-scrub { flex: 1 1 auto; accent-color: var(--extreme); cursor: pointer; }
-.tl-hint { margin: 0.45rem 0 0; font-size: 0.78rem; color: var(--ink-soft); }
-.tl-lead { margin: 0 0 0.5rem; font-size: 0.9rem; color: var(--ink-soft); }
-.tl-speed { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--ink-soft); }
-.tl-speed select { font: inherit; font-size: 0.78rem; padding: 0.2rem 0.3rem; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); cursor: pointer; }
-@media (max-width: 30rem) {
-  .tl-row { flex-wrap: wrap; }
-  .tl-scrub { order: 3; flex-basis: 100%; }
+.tl-play:active { transform: scale(0.95); }
+.tl-play svg { display: block; }
+.tl-play .icon-pause { display: none; }
+.tl-play[data-playing] .icon-play { display: none; }
+.tl-play[data-playing] .icon-pause { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  .tl-play { transition: none; }
 }
 
-/* --- charts --- */
-.chart { margin: 1.2rem 0 1.8rem; }
-.chart svg { width: 100%; height: auto; display: block; background: var(--paper); }
-.chart figcaption { margin-top: 0.6rem; font-size: 0.78rem; color: var(--ink-soft); }
-.chart-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; margin-bottom: 0.5rem; font-size: 0.82rem; color: var(--ink-soft); }
-.chart-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
-.chart-key { display: inline-block; width: 1.1rem; height: 0.2rem; border-radius: 1px; }
-.chart-tick { font-size: 10px; fill: #7c7a72; font-variant-numeric: tabular-nums; }
-.chart-note-text { font-size: 10px; fill: #7c7a72; }
-.chart-endlabel { font-size: 11px; fill: var(--ink); font-weight: 600; }
-.chart-table { margin-top: 0.7rem; font-size: 0.8rem; }
+.tl-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-sans);
+  min-width: 0;
+}
+.tl-year {
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+}
+.tl-date {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-speed {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+  flex: 0 0 auto;
+}
+.tl-speed select {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.tl-track { position: relative; min-width: 0; }
+.tl-ribbon {
+  display: block;
+  width: 100%;
+  height: 1.5rem;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(20, 35, 28, 0.1);
+}
+.tl-scrub {
+  position: absolute;
+  inset: -0.35rem 0;
+  width: 100%;
+  height: calc(100% + 0.7rem);
+  margin: 0;
+  background: transparent;
+  cursor: ew-resize;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.tl-scrub::-webkit-slider-runnable-track { background: transparent; height: 100%; }
+.tl-scrub::-moz-range-track { background: transparent; height: 100%; }
+.tl-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 4px;
+  height: 2.2rem;
+  border-radius: 2px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--paper-band), 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: ew-resize;
+}
+.tl-scrub::-moz-range-thumb {
+  width: 4px;
+  height: 2.2rem;
+  border: none;
+  border-radius: 2px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--paper-band), 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: ew-resize;
+}
+.tl-scrub:focus-visible { outline: none; }
+.tl-scrub:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent); }
+.tl-scrub:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--accent); }
+
+.tl-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.tl-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+.tl-lead {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+}
+
+@media (max-width: 34rem) {
+  .transport { grid-template-columns: auto minmax(0, 1fr); }
+  .tl-play { width: 2.6rem; height: 2.6rem; }
+  .tl-speed { font-size: 0.7rem; }
+}
+
+/* --------------------------------------------------------------- charts */
+.chart { margin: 0; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart figcaption {
+  margin-top: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--ink-faint);
+}
+.chart-panel {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: clamp(0.8rem, 2vw, 1.3rem);
+  position: relative;
+}
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin-bottom: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+.chart-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.chart-legend-item b {
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.chart-key { display: inline-block; width: 1.2rem; height: 3px; border-radius: 2px; }
+
+/* A 820-unit-wide chart squeezed into a phone puts the axis labels at about
+ * 5px. It scrolls in its own container instead, and the values a reader
+ * actually needs are in the legend above at full size. */
+.chart-scroll { overflow-x: auto; overflow-y: hidden; }
+.chart-scroll > svg { min-width: 36rem; }
+@media (max-width: 40rem) {
+  .chart-endlabel { display: none; }
+}
+
+.chart-tick {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+/* Sits on top of the 50 gridline, so it carries a paper halo rather than
+ * being nudged somewhere it no longer annotates. */
+.chart-note-text {
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  fill: var(--ink-faint);
+  paint-order: stroke;
+  stroke: var(--paper-raised);
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+}
+.chart-endlabel {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  fill: var(--ink);
+  font-weight: 650;
+}
+.chart-hit { fill: transparent; cursor: crosshair; }
+.chart-guide { stroke: var(--ink); stroke-width: 1; opacity: 0; pointer-events: none; }
+.chart-guide[data-on] { opacity: 0.35; }
+.chart-dot { pointer-events: none; opacity: 0; }
+.chart-dot[data-on] { opacity: 1; }
+
+.heat-cell { transition: opacity 100ms ease-out; }
+.heat-grid[data-active] .heat-cell { opacity: 0.45; }
+.heat-grid[data-active] .heat-cell[data-on] { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .heat-cell { transition: none; }
+}
+
+.chart-table { margin-top: 0.9rem; font-family: var(--font-sans); font-size: 0.8rem; }
 .chart-table summary { cursor: pointer; color: var(--ink-soft); }
-.chart-table-scroll { overflow-x: auto; margin-top: 0.5rem; }
-.chart-table table { font-size: 0.76rem; }
+.chart-table summary:hover { color: var(--ink); }
+.chart-table-scroll { overflow-x: auto; margin-top: 0.6rem; }
+.chart-table table { font-size: 0.74rem; }
+
+/* Scroll affordance for anything that overflows sideways on a phone: a table
+ * with five columns, a 820-unit chart, a twelve-month grid. Two gradients that
+ * scroll with the content sit under two that do not, so the shadow only shows
+ * on the side there is more to see. Pure CSS — no scroll listener. */
+.table-scroll,
+.chart-scroll,
+.heat-scroll {
+  --scroll-bg: var(--paper);
+  background:
+    linear-gradient(to right, var(--scroll-bg) 40%, rgba(255, 255, 255, 0)) left center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--scroll-bg) 40%, rgba(255, 255, 255, 0)) right center / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(20, 35, 28, 0.15), rgba(20, 35, 28, 0)) left center / 0.75rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(20, 35, 28, 0.15), rgba(20, 35, 28, 0)) right center / 0.75rem 100% no-repeat scroll;
+}
+.chart-panel .chart-scroll,
+.chart-panel .heat-scroll { --scroll-bg: var(--paper-raised); }
+
+/* ---------------------------------------------------------------- table */
+.table-scroll { overflow-x: auto; }
+.region-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-size: 0.88rem;
+}
+.region-table th,
+.region-table td {
+  text-align: left;
+  padding: 0.62rem 0.7rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.region-table thead th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+.region-table td.num { text-align: right; }
+.region-table th.num { text-align: right; }
+.region-table tbody tr { transition: background 100ms ease-out; }
+.region-table tbody tr:hover,
+.region-table tbody tr[data-on] { background: var(--paper-band); }
+@media (prefers-reduced-motion: reduce) {
+  .region-table tbody tr { transition: none; }
+}
+
+.cell-region { min-width: 11rem; }
+.region-name { font-weight: 650; font-size: 0.95rem; }
+.region-meta {
+  display: block;
+  margin-top: 0.08rem;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  letter-spacing: 0.03em;
+}
+.low-n {
+  white-space: nowrap;
+  border-bottom: 1px dotted var(--ink-faint);
+  cursor: help;
+}
+.score { font-size: 1.05rem; font-weight: 650; }
+
+.band {
+  display: inline-block;
+  padding: 0.16rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: #fff;
+  white-space: nowrap;
+}
+.band.d4 { background: var(--extreme); }
+.band.d3 { background: var(--severe); }
+.band.d2 { background: var(--moderate); color: #2b1c06; }
+.band.d1 { background: var(--mild); color: #2b2406; }
+.band.d0 { background: var(--dry); color: #22240d; }
+.band.normal { background: transparent; color: var(--ink-faint); padding-left: 0; }
+
+.spark { display: block; }
+
+/* ---------------------------------------------------------------- lists */
+.findings {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+.findings li {
+  padding-left: 1.4rem;
+  position: relative;
+  text-wrap: pretty;
+}
+.findings li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--extreme);
+}
+
+.card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.link-card {
+  display: block;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.2rem;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 120ms ease-out, transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+.link-card:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+}
+.link-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: block;
+}
+.link-card-meta {
+  display: block;
+  margin-top: 0.3rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.link-card-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-sans);
+}
+.link-card-stat b {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--extreme);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.link-card-stat span { font-size: 0.78rem; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) {
+  .link-card { transition: none; }
+  .link-card:hover { transform: none; }
+}
+
+/* --------------------------------------------------------- NASA mirror */
+/* NASA's own raster, mirrored unmodified. Capped well under the wide column:
+ * it is corroboration for the regional series, not the headline graphic, and
+ * at full width its 3300x2550 would out-shout the map. */
+.mirror {
+  margin: 0;
+  max-width: 46rem;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  padding: clamp(0.5rem, 1.5vw, 0.9rem);
+}
+.mirror img { display: block; width: 100%; height: auto; border-radius: 3px; }
+.mirror figcaption {
+  margin-top: 0.6rem;
+  padding: 0 0.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+}
+
+/* ------------------------------------------------------------- prose page */
+.prose > * { max-width: var(--content); }
+.prose h2 { margin-top: 2.6rem; }
+.prose h2:first-of-type { margin-top: 0; }
+.prose ul, .prose ol { padding-left: 1.3rem; }
+.prose li { margin-bottom: 0.45rem; }
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: var(--paper-sunk);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}

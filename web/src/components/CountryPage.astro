@@ -18,6 +18,9 @@ const name = s.countryName[country];
 const ts = loadTimeseries();
 const regions = regionsForCountry(country);
 const latest = ts.weeks[ts.weeks.length - 1];
+const recordYears = Math.floor(
+  (Date.parse(latest) - Date.parse(ts.weeks[0])) / (365.25 * 86_400_000)
+);
 
 const atOrBelow = (threshold: number) =>
   regions.filter((r) => {
@@ -36,23 +39,51 @@ const longestStreak = consecutiveWeeksAtOrBelow(worstRegion, ts.weeks, 5);
   description={s.countryDescription(name)}
   page={country === "RO" ? "romania" : "hungary"}
 >
-  <h1>{name}</h1>
-  <p class="lede">
-    {s.countryLede(atOrBelow(2), regions.length, atOrBelow(5), formatDate(lang, latest))}
-    {longestStreak > 0 && ` ${s.countryStreak(longestStreak, worstRegion.name)}`}
-  </p>
+  <section class="hero hero-compact u-full">
+    <div class="hero-inner">
+      <p class="eyebrow">NASA GRACE-FO · {formatDate(lang, latest)}</p>
+      <h1 class="hero-title">{name}</h1>
+      <p class="hero-lede">
+        {s.countryLede(atOrBelow(2), regions.length, atOrBelow(5), formatDate(lang, latest))}
+        {longestStreak > 0 && ` ${s.countryStreak(longestStreak, worstRegion.name)}`}
+      </p>
+    </div>
+  </section>
 
-  <h2>{s.countryMapHeading(formatDate(lang, latest))}</h2>
-  <RegionMap regions={regions} week={latest} focus={country} lang={lang} timelapse />
+  <section class="section u-wide">
+    <RegionMap
+      lang={lang}
+      week={latest}
+      focus={country}
+      timelapse
+      heading={s.countryMapHeading(formatDate(lang, latest))}
+      transportLead={s.timelapseHeading(recordYears)}
+    />
+  </section>
 
-  <h2>{s.countryTableHeading(formatDate(lang, latest))}</h2>
-  <RegionTable regions={regions} weeks={ts.weeks} lang={lang} />
+  <section class="section u-wide">
+    <div class="section-head">
+      {/* Not a playback-tracking date: the table is server-rendered for the
+          newest week and does not scrub with the map. */}
+      <h2>{s.countryTableHeading(formatDate(lang, latest))}</h2>
+    </div>
+    <div class="table-scroll">
+      <RegionTable regions={regions} weeks={ts.weeks} lang={lang} />
+    </div>
+    <p class="note" style="margin-top: 0.9rem;">{s.tableNote}</p>
+  </section>
 
-  <p style="font-size: 0.85rem; color: var(--ink-soft);">{s.tableNote}</p>
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.trendHeading}</h2>
+    </div>
+    <TrendChart lang={lang} country={country} />
+  </section>
 
-  <h2>{s.trendHeading}</h2>
-  <TrendChart lang={lang} country={country} />
-
-  <h2>{s.heatmapHeading}</h2>
-  <SeasonHeatmap lang={lang} country={country} />
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.heatmapHeading}</h2>
+    </div>
+    <SeasonHeatmap lang={lang} country={country} />
+  </section>
 </Base>

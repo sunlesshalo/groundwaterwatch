@@ -41,6 +41,10 @@ const countries = (["HU", "RO"] as const).map((c) => ({
 const unl = loadUnlLatest();
 const unlHref = unlLayerHref(unl.week_start);
 const startYear = Number(facts.recordStart.slice(0, 4));
+
+// The hero number is a pull-quote of the claim sentence beside it, read off the
+// same facts — never a separately computed figure.
+const depletedNow = facts.regionsAtOrBelow(2);
 ---
 <Base
   lang={lang}
@@ -48,63 +52,113 @@ const startYear = Number(facts.recordStart.slice(0, 4));
   description={s.homeDescription}
   page="home"
 >
-  <h1>{s.h1}</h1>
-  <p class="lede">{s.intro(startYear)}</p>
-  <p class="headline">{s.headline(formatDate(lang, latest), claim)}</p>
+  <section class="hero u-full">
+    <div class="hero-inner">
+      <div class="hero-text">
+        {/* The archive's as-of date, not the map's. Scrubbing moves the map
+            and its own readout; the vintage of the data does not change. */}
+        <p class="eyebrow">NASA GRACE-FO · {formatDate(lang, latest)}</p>
+        <h1 class="hero-title">{s.h1}</h1>
+        <p class="hero-intro">{s.intro(startYear)}</p>
+      </div>
 
-  <h2>{s.mapHeading(formatDate(lang, latest))}</h2>
-  <p class="tl-lead">{s.timelapseHeading(facts.recordYears)}</p>
-  <RegionMap regions={ts.regions} lang={lang} timelapse />
+      <div class="hero-figure">
+        <RegionMap
+          lang={lang}
+          timelapse
+          transportLead={s.timelapseHeading(facts.recordYears)}
+        />
+      </div>
 
-  <h2>{s.breakdownHeading}</h2>
-  <ul class="country-summary">
-    {countries.map((c) => (
-      <li>
-        {s.countryLine(
-          c.name,
-          c.depleted.length,
-          c.total,
-          c.depleted.map((r) => r.name).join(", ")
-        )}
-      </li>
-    ))}
-    <li>{s.streakLine(streak.region.name, streak.weeks, yearsOf(streak.weeks))}</li>
-  </ul>
+      <div class="hero-stat">
+        <p class="stat-figure" aria-hidden="true">
+          <span class="stat-value">{depletedNow}</span>
+          <span class="stat-rule"></span>
+          <span class="stat-total">{facts.totalRegions}</span>
+        </p>
+        <p class="hero-claim">{s.headline(formatDate(lang, latest), claim)}</p>
+      </div>
+    </div>
+  </section>
 
-  <h2>{s.trendHeading}</h2>
-  <TrendChart lang={lang} />
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.breakdownHeading}</h2>
+    </div>
+    <ul class="findings">
+      {countries.map((c) => (
+        <li>
+          {s.countryLine(
+            c.name,
+            c.depleted.length,
+            c.total,
+            c.depleted.map((r) => r.name).join(", ")
+          )}
+        </li>
+      ))}
+      <li>{s.streakLine(streak.region.name, streak.weeks, yearsOf(streak.weeks))}</li>
+    </ul>
+  </section>
 
-  <h2>{s.heatmapHeading}</h2>
-  <SeasonHeatmap lang={lang} />
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.trendHeading}</h2>
+    </div>
+    <TrendChart lang={lang} />
+  </section>
 
-  <h2>{s.unlHeading(formatDate(lang, unl.week_start))}</h2>
-  <p style="margin-bottom: 0.6rem;">{s.unlBody}</p>
-  <p>
-    <img
-      src={unlHref}
-      alt={`NASA groundwater map, ${formatDate(lang, unl.week_start)}`}
-      style="max-width: 100%; height: auto; border: 1px solid var(--line);"
-    />
-  </p>
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.heatmapHeading}</h2>
+    </div>
+    <SeasonHeatmap lang={lang} />
+  </section>
 
-  <h2>{s.pagesHeading}</h2>
-  <ul>
-    <li>
-      <a href={withBase(pagePath(lang, "romania"))}>
-        {s.pagesLink(s.countryName.RO, regionsForCountry("RO").length, facts.recordYears)}
-      </a>
-    </li>
-    <li>
-      <a href={withBase(pagePath(lang, "hungary"))}>
-        {s.pagesLink(s.countryName.HU, regionsForCountry("HU").length, facts.recordYears)}
-      </a>
-    </li>
-  </ul>
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.unlHeading(formatDate(lang, unl.week_start))}</h2>
+      <p>{s.unlBody}</p>
+    </div>
+    <figure class="mirror">
+      <img
+        src={unlHref}
+        alt={`NASA groundwater map, ${formatDate(lang, unl.week_start)}`}
+        width="3300"
+        height="2550"
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
+  </section>
 
-  <h2>{s.explainHeading}</h2>
-  <p>{s.explainBody(facts.recordYears)}</p>
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.pagesHeading}</h2>
+    </div>
+    <ul class="card-grid">
+      {countries.map((c) => (
+        <li>
+          <a class="link-card" href={withBase(pagePath(lang, c.code === "RO" ? "romania" : "hungary"))}>
+            <span class="link-card-title">
+              {s.pagesLink(c.name, c.total, facts.recordYears)}
+            </span>
+            <span class="link-card-stat">
+              <b>{c.depleted.length}</b>
+              <span>/{c.total} · {s.bands.d4}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
 
-  <div class="callout">
-    {s.methodologyCalloutPre}<a href={withBase(pagePath(lang, "methodology"))}>{s.methodologyLinkText}</a>{lang !== "en" && ` ${s.englishOnlyNote}`}{s.methodologyCalloutPost}
-  </div>
+  <section class="section u-wide">
+    <div class="section-head">
+      <h2>{s.explainHeading}</h2>
+    </div>
+    <p>{s.explainBody(facts.recordYears)}</p>
+    <div class="callout">
+      {s.methodologyCalloutPre}<a href={withBase(pagePath(lang, "methodology"))}>{s.methodologyLinkText}</a>{lang !== "en" && ` ${s.englishOnlyNote}`}{s.methodologyCalloutPost}
+    </div>
+  </section>
 </Base>

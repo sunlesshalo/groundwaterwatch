@@ -3,7 +3,7 @@
   "description": "Public dashboard tracking groundwater depletion in Romania and Hungary from NASA GRACE-FO data assimilation, at NUTS-2 resolution.",
   "created": "2026-06-05",
   "live_url": "https://sunlesshalo.github.io/groundwaterwatch/",
-  "current_focus": "Get a native read of the RO/HU copy. Still the last launch blocker, and now the only thing between this and a press pitch: as of 2026-08-01 the homepage shows NASA's Europe map (it was showing the contiguous US), the charts carry units, both data workflows are green, and everything is verified live. Two lower-priority items are queued behind it: the GitHub Actions Node 20 deprecation (bump as its own change - the Pages actions move together and a bad bump breaks publishing), and confirming the deploy ref fix under a real workflow_call, which can only happen when the bot itself commits on a Monday archive run.",
+  "current_focus": "Get a native read of the RO/HU copy - now four strings larger after the design pass (skipToContent, nav.sections, pinHint, pinnedHint). Still the last launch blocker and the only thing between this and a press pitch: as of 2026-08-01 the site has had a full design pass (full-bleed hero, ~720px map, readout cards with pinning, chart scrubbing), the homepage shows NASA's Europe map, both data workflows are green, and everything is verified live. Three lower-priority items are queued behind it: astro check has never run (the script exists but @astrojs/check and typescript are not installed, and astro build only strips types - bump as its own change since it touches package-lock), the GitHub Actions Node 20 deprecation (also its own change - the Pages actions move together and a bad bump breaks publishing), and confirming the deploy ref fix under a real workflow_call, which can only happen when the bot itself commits on a Monday archive run.",
   "features": [
     {
       "name": "data-pipeline",
@@ -66,21 +66,21 @@
       "description": "Plain-language copy in EN/RO/HU. English at root, /ro/ and /hu/ prefixed. Methodology is EN-only by choice.",
       "status": "passing",
       "verified": true,
-      "notes": "10 routes build, zero broken internal links, correct hreflang with x-default, per-locale og:locale and canonicals. CAVEAT: translations are machine-authored and have NOT been reviewed by a native speaker."
+      "notes": "10 routes build, zero broken internal links, correct hreflang with x-default, per-locale og:locale and canonicals. CAVEAT: translations are machine-authored and have NOT been reviewed by a native speaker. 2026-08-01 design pass added FOUR new strings to that queue - skipToContent, nav.sections, pinHint, pinnedHint. The hero deliberately reuses existing strings and needed none: its eyebrow is 'NASA GRACE-FO' plus a date, and the big number is a pull-quote of the existing claim sentence rather than a split of it, because splitting a translated sentence breaks on Hungarian word order."
     },
     {
       "name": "timelapse-playback",
       "description": "Visitor-controlled playback of all 1217 weeks with 0.5x-4x speed; progressive enhancement over the static map.",
       "status": "passing",
       "verified": true,
-      "notes": "Payload, markup and timing verified: 16 columns match 16 rendered paths, no malformed rows, caption date-swap resolves to exactly one match in all three locales, and timing simulated at 60/120 Hz across all speeds lands within 0.1s. Click and drag confirmed working in a real browser by the user on 2026-08-01, closing the last gap."
+      "notes": "Payload, markup and timing verified: 16 columns match 16 rendered paths, no malformed rows, caption date-swap resolves to exactly one match in all three locales, and timing simulated at 60/120 Hz across all speeds lands within 0.1s. Click and drag confirmed working in a real browser by the user on 2026-08-01, closing the last gap. 2026-08-01 design pass: the transport was rebuilt - round play button, a large tabular year readout, and a scrub track that is itself a 23-year ribbon of the national average (consecutive same-band weeks collapsed into runs server-side). The fragile caption date-swap was KEPT rather than replaced, because it was already verified in all three locales; it now drives any [data-tl-datetext] element inside the map block. That fixed a real pre-existing bug: the country-page map heading said 'week of 25 May 2026' while the map showed 2009. The heading now lives inside RegionMap. The TABLE heading deliberately does not track, because the table does not scrub."
     },
     {
       "name": "charts",
       "description": "Trailing 52-week trend line per country and a year x month heatmap, server-rendered SVG.",
       "status": "passing",
       "verified": true,
-      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. The 12-column heatmap confirmed in a real browser by the user on 2026-08-01. On country pages the charts now sit BELOW the region table, matching the homepage order. 2026-08-01: trend end labels now carry a unit ('Románia 6/100') - the bare number could read as a rank or a score out of 10. Sizing at the same time fixed a latent clip: labels are 11px font-weight:600 over Georgia, which has no semibold, so it resolves to Georgia BOLD, at which 'Magyarország 1' was 87.8px against 82px available. viewBox widened 760->820 and PAD.right 92->146 so plot width is unchanged (634->640) and the worst case 'Magyarország 100/100' ends at 813.3 of 820."
+      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. The 12-column heatmap confirmed in a real browser by the user on 2026-08-01. On country pages the charts now sit BELOW the region table, matching the homepage order. 2026-08-01: trend end labels now carry a unit ('Románia 6/100') - the bare number could read as a rank or a score out of 10. Sizing at the same time fixed a latent clip: labels are 11px font-weight:600 over Georgia, which has no semibold, so it resolves to Georgia BOLD, at which 'Magyarország 1' was 87.8px against 82px available. viewBox widened 760->820 and PAD.right 92->146 so plot width is unchanged (634->640) and the worst case 'Magyarország 100/100' ends at 813.3 of 820. 2026-08-01 design pass: both charts now sit in panels and carry hover readouts. Three fixes worth keeping: end labels are decluttered around their midpoint because in a drought both countries sit near the floor and 'Romania 6/100' and 'Hungary 1/100' overprinted; the 'an ordinary year' annotation is drawn AFTER the series paths, since a paper halo can only mask what is already painted and the Hungary line was striking through it; and the legend now carries each series' current value, which is what a phone reader gets because the in-chart end labels are hidden under 40rem where the 820-unit viewBox would render them at about 5px (the chart scrolls in its own container there)."
     },
     {
       "name": "operational-ingest",
@@ -88,6 +88,20 @@
       "status": "passing",
       "verified": true,
       "notes": "pipeline/operational.py + pipeline/verify_operational.py. Grid alignment proven: per-region valid_cells match the archive exactly. NOT wired into the site, deliberately - a current-week readout needs new EN/RO/HU copy and the RO/HU translations are still awaiting a native read. MUST NOT be spliced onto the archive series: measured over 768 region-weeks the two products differ by median 1.44 percentile points, p90 7.05, max 24.5, against the original plan's own <1 tolerance, and the disagreement is SEASONAL, which would poison the rolling mean and the year x month heatmap specifically. Present agreement looks good (median 0.14 at the join) only because RO/HU are saturated near percentile 0 in the current drought. Full write-up in docs/path-b-plan.md."
+    },
+    {
+      "name": "design-system",
+      "description": "Warm-paper design system for the whole site: layout grid, type scale, hero band, readout cards, transport bar.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Added 2026-08-01. public/styles.css is now tokens + a CSS-grid layout with content/wide/full tracks - the fix for everything living in a 78ch column, which rendered the map ~330px wide on a 1440px screen. Map is now ~720px in a full-bleed hero. Serif carries prose, sans carries every number and control, both from system stacks (no webfont). Every heading starts on one left edge (--wide); graphics cap at --graphic. Direction was the user's call: warm paper everywhere, no dark mode; the hero itself is the reel-capture frame rather than a separate cinema mode. Verified over CDP in a real browser across EN/RO/HU: zero console errors and zero horizontal overflow on 8 pages x 5 widths (390/768/1024/1440/1920), 101 internal links and assets with zero broken, and the no-JS path still renders 16 regions, 15 score labels, legends and 305 native title tooltips. LANDMINE: the severity hex values now live in FOUR places that must move together - bandColor() in lib/data.ts, the BANDS table in RegionMap.astro's client script, the severity tokens in public/styles.css, and pipeline/share_card.py."
+    },
+    {
+      "name": "map-interaction",
+      "description": "Styled readout card for map, trend line and heatmap, with pinning, keyboard access and table-row linking.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Added 2026-08-01. Native <title> tooltips are removed on JS init and replaced by one card (name, score, band pill, weeks-in-a-row); click to pin, Esc to release, focusable paths, and hovering a table row drives the map. Emphasis is by dimming the rest - a region's fill is its value and must never change on hover. Map labels are fitted at build time against each region's path bbox via the new pathBBox() in lib/data.ts, so a label that does not fit is not drawn: HU11 Budapest is the only region on the combined map too small for a score, RO32 the only one on the Romania map too small for a name. Every card value was recomputed independently from timeseries.json (Budapest 0.4 / 48-week streak, Nyugat-Dunantul 0.9 / 70, May 2012 trend RO 24.2 and HU 16.5, 2022-March heatmap 7.8). Focus-ring removal is scoped to .map-svg[data-enhanced] so no-JS keyboard users keep an indicator."
     },
     {
       "name": "embed-widget",

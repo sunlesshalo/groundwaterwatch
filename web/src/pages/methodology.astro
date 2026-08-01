@@ -2,13 +2,19 @@
 import Base from "../layouts/Base.astro";
 ---
 <Base title="Methodology — groundwaterwatch" page="methodology">
-  <h1>Methodology</h1>
-  <p class="lede">
-    Two data products. Public domain. Aggregated to NUTS-2 regions. We
-    document everything here because awareness work without methodology
-    isn't journalism, it's vibes.
-  </p>
+  <section class="hero hero-compact u-full">
+    <div class="hero-inner">
+      <p class="eyebrow">Sources, baselines and limits</p>
+      <h1 class="hero-title">Methodology</h1>
+      <p class="hero-lede">
+        Two data products. Public domain. Aggregated to NUTS-2 regions. We
+        document everything here because awareness work without methodology
+        isn't journalism, it's vibes.
+      </p>
+    </div>
+  </section>
 
+  <div class="prose section u-wide">
   <h2>Current week (this week's map)</h2>
   <p>
     The current map is mirrored directly from
@@ -85,4 +91,5 @@ import Base from "../layouts/Base.astro";
     <a href="https://github.com/sunlesshalo/groundwaterwatch">github.com/sunlesshalo/groundwaterwatch</a>.
     NASA data is public domain. Eurostat boundaries are CC-BY 4.0.
   </p>
+  </div>
 </Base>

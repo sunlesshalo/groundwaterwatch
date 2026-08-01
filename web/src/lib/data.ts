@@ -120,6 +120,29 @@ export function latestWeek(): string {
   return ts.weeks[ts.weeks.length - 1];
 }
 
+/** Bounding box of a projected region path, in the view's user units.
+ *
+ * The paths this reads are polygon outlines emitted by the pipeline — only
+ * absolute M/L commands, so every number in them is a coordinate and they
+ * alternate x, y. That is the whole parser. It is used to decide whether a
+ * label fits inside its own region; anything cleverer would need a real SVG
+ * path parser for no gain.
+ */
+export function pathBBox(d: string): { x: number; y: number; w: number; h: number } {
+  const nums = d.match(/-?\d+(?:\.\d+)?/g);
+  if (!nums || nums.length < 2) return { x: 0, y: 0, w: 0, h: 0 };
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    const x = Number(nums[i]);
+    const y = Number(nums[i + 1]);
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+}
+
 export function bandColor(band: string): string {
   return {
     d4: "#6e1f1f",
