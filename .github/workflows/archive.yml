@@ -1,0 +1,78 @@
+name: refresh archive
+
+# The GES DISC final archive lags 2-6 months and advances about one week per
+# week, so daily probing would gain nothing and just throw 404s at NASA —
+# backfill attempts four consecutive misses before it stops. Weekly is enough.
+on:
+  schedule:
+    - cron: "43 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # See mirror.yml — shared group so the two jobs never push concurrently.
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # GES DISC returns 401 without these. The account must also have the
+      # "NASA GESDISC DATA ARCHIVE" application authorized — see pipeline/README.md.
+      - name: Authenticate to NASA Earthdata
+        env:
+          EARTHDATA_USER: ${{ secrets.EARTHDATA_USER }}
+          EARTHDATA_PASS: ${{ secrets.EARTHDATA_PASS }}
+        run: |
+          if [ -z "$EARTHDATA_USER" ] || [ -z "$EARTHDATA_PASS" ]; then
+            echo "::error::EARTHDATA_USER / EARTHDATA_PASS repository secrets are not set"
+            exit 1
+          fi
+          printf 'machine urs.earthdata.nasa.gov login %s password %s\n' \
+            "$EARTHDATA_USER" "$EARTHDATA_PASS" > "$HOME/.netrc"
+          chmod 600 "$HOME/.netrc"
+
+      # Resumes from timeseries.json, since the weekly_*.json intermediates are
+      # gitignored and a checkout has almost none of them. Usually adds zero or
+      # one week — that is the normal result, not a failure.
+      - name: Catch the archive up
+        working-directory: pipeline
+        run: uv run python -m pipeline.backfill --since-last-weekly
+
+      - name: Fail if the feed has frozen
+        working-directory: pipeline
+        run: uv run python -m pipeline.freshness --archive-max-weeks 26
+
+      - name: Verify the site still builds
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "groundwaterwatch-bot"
+          git config user.email "actions@github.com"
+          git add data/timeseries.json
+          if git diff --cached --quiet; then
+            echo "no change — no new week in the final archive yet"
+          else
+            git commit -m "data: archive -> $(jq -r '.weeks[-1]' data/timeseries.json)"
+            git push
+          fi

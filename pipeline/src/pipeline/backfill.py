@@ -37,12 +37,29 @@ def all_mondays(start: date, end: date):
         cur += timedelta(days=7)
 
 
+def load_existing_timeseries() -> dict:
+    path = OUT_DIR / "timeseries.json"
+    if not path.exists():
+        return {"weeks": [], "regions": []}
+    return json.loads(path.read_text())
+
+
 def latest_existing_weekly() -> date | None:
+    """Newest week we already hold, from the weekly files *or* the compiled series.
+
+    The weekly files are gitignored, so a fresh checkout has almost none of them
+    while timeseries.json carries the full history. Resuming from the weekly
+    files alone would re-download everything back to the oldest gap on every run.
+    """
+    candidates = []
     files = sorted(OUT_DIR.glob("weekly_*.json"))
-    if not files:
-        return None
-    name = files[-1].stem  # "weekly_YYYY-MM-DD"
-    return datetime.strptime(name.split("_", 1)[1], "%Y-%m-%d").date()
+    if files:
+        name = files[-1].stem  # "weekly_YYYY-MM-DD"
+        candidates.append(datetime.strptime(name.split("_", 1)[1], "%Y-%m-%d").date())
+    weeks = load_existing_timeseries().get("weeks") or []
+    if weeks:
+        candidates.append(datetime.strptime(weeks[-1], "%Y-%m-%d").date())
+    return max(candidates) if candidates else None
 
 
 def parse_args():
@@ -55,11 +72,18 @@ def parse_args():
 
 
 def compile_timeseries():
-    """Walk all weekly_*.json and emit a single timeseries.json for the frontend."""
-    weeks = sorted(OUT_DIR.glob("weekly_*.json"))
-    by_region: dict[str, dict] = {}
-    weeks_index: list[str] = []
-    for path in weeks:
+    """Merge every weekly_*.json into timeseries.json for the frontend.
+
+    Merges rather than rebuilds: the weekly files are gitignored, so anywhere
+    but a full local checkout — CI especially — a rebuild-from-disk would
+    discard the committed history and leave only the weeks this run happened to
+    download. Existing weeks are overwritten by newer weekly files, so a
+    reprocessed week still wins.
+    """
+    existing = load_existing_timeseries()
+    by_region: dict[str, dict] = {r["nuts_id"]: r for r in existing.get("regions", [])}
+    weeks_index: list[str] = list(existing.get("weeks", []))
+    for path in sorted(OUT_DIR.glob("weekly_*.json")):
         payload = json.loads(path.read_text())
         weeks_index.append(payload["week_start"])
         for r in payload["regions"]:
@@ -77,17 +101,21 @@ def compile_timeseries():
                 "bands": r["bands"],
             }
     out = {
-        "weeks": weeks_index,
+        # Deduped: a week can arrive from both the existing series and a
+        # weekly file. The per-region overwrite above already let the weekly
+        # file win; this just keeps the index itself unique and ordered.
+        "weeks": sorted(set(weeks_index)),
         "regions": list(by_region.values()),
     }
     target = OUT_DIR / "timeseries.json"
     target.write_text(json.dumps(out, indent=2, separators=(",", ":")))
-    print(f"[ok] compiled timeseries.json: {len(weeks_index)} weeks x {len(by_region)} regions")
+    print(f"[ok] compiled timeseries.json: {len(out['weeks'])} weeks x {len(by_region)} regions")
 
 
 def main():
     args = parse_args()
-    start = args.start or (latest_existing_weekly() + timedelta(days=7) if args.since_last_weekly and latest_existing_weekly() else START_DEFAULT)
+    known = latest_existing_weekly() if args.since_last_weekly else None
+    start = args.start or (known + timedelta(days=7) if known else START_DEFAULT)
     if start.weekday() != 0:
         start = start + timedelta(days=(7 - start.weekday()) % 7)
     # End: we don't know the latest archive cutoff without probing. Try most recent

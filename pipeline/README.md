@@ -65,12 +65,30 @@ uv run python -m pipeline.unl_mirror --out ../web/public/maps --layers gws --pru
 uv run python -m pipeline.unl_mirror
 ```
 
+The mirror exits early when the pointer already names the newest published
+week and its PNGs are on disk, so running it daily costs one HEAD request on
+the six days out of seven when UNL has published nothing. Pass `--force` to
+re-download anyway.
+
 `--layers gws --prune` is what keeps `web/public/maps/` at ~350 KB instead of
 growing ~1 MB a week. The two unused layers are one command away if a
 root-zone or surface soil-moisture page is ever built. A mirrored week
 directory always matches its `manifest.json`; `--prune` runs only after every
 selected layer downloads, so a UNL outage leaves the previous week in place
 rather than emptying the directory.
+
+### Freshness guard
+
+Fails when a feed has stopped advancing, which otherwise looks identical to a
+feed that is merely quiet:
+
+```sh
+uv run python -m pipeline.freshness --unl-max-weeks 3
+uv run python -m pipeline.freshness --archive-max-weeks 26
+```
+
+Thresholds are loose on purpose — they catch "every fetch now 404s", not the
+normal 1–7 day (UNL) and 2–6 month (GES DISC) publication lags.
 
 ## Output schema
 

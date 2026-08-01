@@ -1,0 +1,71 @@
+name: mirror UNL map
+
+# UNL publishes the operational map on an unpredictable weekday — Mon, Tue, Wed
+# and Thu all appeared in an 8-week sample, with a lag of 1-7 days. A fixed
+# weekly run can therefore miss a map by nearly a full cycle, so this runs daily
+# and is a no-op on the days nothing new has been published.
+#
+# 06:23 UTC lands after the observed publication window (mostly 14:00-18:00 UTC
+# the previous day). Off-the-hour because GitHub delays scheduled runs at peak.
+on:
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # Shared with refresh-archive: both commit and push to main, so they must
+  # never overlap. Queue rather than cancel — a skipped data refresh is a
+  # silently stale site.
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Installed via the official script rather than a marketplace action so
+      # this doesn't depend on an action version pinned at authoring time.
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # No Earthdata credentials needed: nasagrace.unl.edu is public.
+      - name: Mirror the latest UNL map
+        working-directory: pipeline
+        run: uv run python -m pipeline.unl_mirror --out ../web/public/maps --layers gws --prune
+
+      - name: Fail if the feed has frozen
+        working-directory: pipeline
+        run: uv run python -m pipeline.freshness --unl-max-weeks 3
+
+      # Runs before the commit, so the build-time guards in the web app gate
+      # what gets committed instead of reporting after the fact.
+      - name: Verify the site still builds
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "groundwaterwatch-bot"
+          git config user.email "actions@github.com"
+          git add data/unl-latest.json web/public/maps
+          if git diff --cached --quiet; then
+            echo "no change — UNL has not published a new week"
+          else
+            git commit -m "data: UNL operational map -> $(jq -r .week_start data/unl-latest.json)"
+            git push
+          fi

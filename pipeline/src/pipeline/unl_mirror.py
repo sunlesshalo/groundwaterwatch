@@ -72,11 +72,35 @@ def prune_other_weeks(out_dir: Path, keep: date) -> list[str]:
     return removed
 
 
-def mirror(week_start: date, out_dir: Path, layers: Sequence[str] | None = None) -> dict:
+def resolve_layers(layers: Sequence[str] | None) -> list[str]:
     selected = list(layers) if layers else list(LAYERS)
     unknown = [k for k in selected if k not in LAYERS]
     if unknown:
         raise SystemExit(f"unknown layer(s): {', '.join(unknown)}; choose from {', '.join(LAYERS)}")
+    return selected
+
+
+def is_current(pointer_path: Path, out_dir: Path, week: date, layers: Sequence[str]) -> bool:
+    """True when the pointer already names `week` and every selected layer is on disk.
+
+    Lets the daily job be a no-op on the six days out of seven when UNL has not
+    published anything new, instead of re-downloading and rewriting the pointer's
+    `fetched_at` — which would commit a no-change diff every single day.
+    """
+    if not pointer_path.exists():
+        return False
+    try:
+        pointer = json.loads(pointer_path.read_text())
+    except json.JSONDecodeError:
+        return False
+    if pointer.get("week_start") != week.isoformat():
+        return False
+    week_dir = out_dir / week.isoformat()
+    return all((week_dir / f"{key}.png").exists() for key in layers)
+
+
+def mirror(week_start: date, out_dir: Path, layers: Sequence[str] | None = None) -> dict:
+    selected = resolve_layers(layers)
 
     week_dir = out_dir / week_start.isoformat()
     week_dir.mkdir(parents=True, exist_ok=True)
@@ -121,6 +145,11 @@ def parse_args():
         action="store_true",
         help="remove previously mirrored weeks from --out, keeping only this one",
     )
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help="re-download even when the pointer already names the latest week",
+    )
     return p.parse_args()
 
 
@@ -128,9 +157,16 @@ def main():
     args = parse_args()
     repo_root = Path(__file__).resolve().parents[3]
     out_dir = args.out or (repo_root / "pipeline" / "data" / "unl")
+    pointer_path = repo_root / "data" / "unl-latest.json"
+    selected = resolve_layers(args.layers)
     week = args.date or probe_latest()
+
+    if not args.force and is_current(pointer_path, out_dir, week, selected):
+        print(f"[skip] already current for week {week.isoformat()}; nothing to do")
+        return
+
     print(f"[ok] mirroring UNL maps for week {week.isoformat()}")
-    manifest = mirror(week, out_dir, args.layers)
+    manifest = mirror(week, out_dir, selected)
     for key, info in manifest["layers"].items():
         print(f"  {key}: {info['file']} ({info['bytes'] / 1024:.1f} KB)")
 
@@ -141,7 +177,6 @@ def main():
             print(f"[ok] pruned old week {name}")
 
     # Write a top-level pointer so the frontend can find the latest week.
-    pointer_path = repo_root / "data" / "unl-latest.json"
     pointer_path.parent.mkdir(parents=True, exist_ok=True)
     pointer_path.write_text(json.dumps({
         "week_start": week.isoformat(),
