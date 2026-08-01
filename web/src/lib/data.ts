@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_DATA = path.resolve(__dirname, "../../../data");
+const PUBLIC_DIR = path.resolve(__dirname, "../../public");
 
 export interface RegionWeek {
   mean_percentile: number | null;
@@ -49,6 +50,35 @@ export function loadMap(): MapData {
 export function loadTimeseries(): Timeseries {
   const raw = fs.readFileSync(path.join(REPO_DATA, "timeseries.json"), "utf8");
   return JSON.parse(raw) as Timeseries;
+}
+
+export type UnlLayer = "gws" | "rtzsm" | "sfsm";
+
+export interface UnlLatest {
+  week_start: string;
+  fetched_at: string;
+  source: string;
+  /** Partial: the weekly job mirrors only the layers the site renders. */
+  layers: Partial<Record<UnlLayer, string>>;
+}
+
+export function loadUnlLatest(): UnlLatest {
+  const raw = fs.readFileSync(path.join(REPO_DATA, "unl-latest.json"), "utf8");
+  return JSON.parse(raw) as UnlLatest;
+}
+
+/** Site-relative href for a mirrored UNL layer. Throws if unl-latest.json names
+ * a week we never mirrored — a failed build beats a broken image on a page the
+ * press is quoting. */
+export function unlLayerHref(week: string, layer: UnlLayer = "gws"): string {
+  const file = path.join(PUBLIC_DIR, "maps", week, `${layer}.png`);
+  if (!fs.existsSync(file)) {
+    throw new Error(
+      `unl-latest.json points at week ${week}, but maps/${week}/${layer}.png is not mirrored. ` +
+        `Run: cd pipeline && uv run python -m pipeline.unl_mirror --out ../web/public/maps`
+    );
+  }
+  return `/maps/${week}/${layer}.png`;
 }
 
 export function regionsForCountry(country: "RO" | "HU"): Region[] {

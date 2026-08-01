@@ -1,7 +1,13 @@
 ---
 import Base from "../layouts/Base.astro";
 import RegionMap from "../components/RegionMap.astro";
-import { loadTimeseries, regionsForCountry, consecutiveWeeksAtOrBelow } from "../lib/data";
+import {
+  loadTimeseries,
+  regionsForCountry,
+  consecutiveWeeksAtOrBelow,
+  loadUnlLatest,
+  unlLayerHref,
+} from "../lib/data";
 
 const ts = loadTimeseries();
 const latest = ts.weeks[ts.weeks.length - 1];
@@ -22,6 +28,9 @@ const longestStreakRegion = allRegions.reduce((best, r) => {
   const s = consecutiveWeeksAtOrBelow(r, ts.weeks, 5);
   return s > consecutiveWeeksAtOrBelow(best, ts.weeks, 5) ? r : best;
 }, allRegions[0]);
+
+const unl = loadUnlLatest();
+const unlHref = unlLayerHref(unl.week_start);
 ---
 <Base title="groundwaterwatch — Europe's hidden drought, mapped weekly">
   <h1>Europe's hidden drought</h1>
@@ -45,17 +54,18 @@ const longestStreakRegion = allRegions.reduce((best, r) => {
     has been below the 5th percentile for <strong>{longestStreak} consecutive weeks</strong>.
   </p>
 
-  <h2>NASA's official operational map (Europe)</h2>
+  <h2>NASA's official operational map, week of {unl.week_start}</h2>
   <p style="margin-bottom: 0.6rem;">
     For the current week, here is NASA Goddard's official global groundwater
     percentile visualization, mirrored from
     <a href="https://nasagrace.unl.edu/">nasagrace.unl.edu</a>. Operational
-    latency is 2–9 days.
+    latency is 2–9 days, so this map runs ahead of the NUTS-2 figures above,
+    which come from the slower final archive.
   </p>
   <p>
     <img
-      src="/maps/2026-05-04/gws.png"
-      alt="NASA GRACE-FO groundwater storage percentile map, week of 2026-05-04"
+      src={unlHref}
+      alt={`NASA GRACE-FO groundwater storage percentile map, week of ${unl.week_start}`}
       style="max-width: 100%; height: auto; border: 1px solid var(--line);"
     />
   </p>

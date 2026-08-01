@@ -19,6 +19,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
+from collections.abc import Sequence
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -49,11 +51,38 @@ def probe_latest(today: date | None = None, max_lookback_weeks: int = 12) -> dat
     raise RuntimeError(f"No UNL map found in the {max_lookback_weeks} weeks before {monday}")
 
 
-def mirror(week_start: date, out_dir: Path) -> dict:
+def prune_other_weeks(out_dir: Path, keep: date) -> list[str]:
+    """Drop mirrored week directories other than `keep`.
+
+    The site only ever renders the latest week, and these PNGs are regenerable
+    from UNL, so retaining older ones just grows the repo. Only touches
+    directories whose name parses as a date, so an unrelated sibling directory
+    is never removed.
+    """
+    removed = []
+    for child in sorted(out_dir.iterdir()):
+        if not child.is_dir() or child.name == keep.isoformat():
+            continue
+        try:
+            datetime.strptime(child.name, "%Y-%m-%d")
+        except ValueError:
+            continue
+        shutil.rmtree(child)
+        removed.append(child.name)
+    return removed
+
+
+def mirror(week_start: date, out_dir: Path, layers: Sequence[str] | None = None) -> dict:
+    selected = list(layers) if layers else list(LAYERS)
+    unknown = [k for k in selected if k not in LAYERS]
+    if unknown:
+        raise SystemExit(f"unknown layer(s): {', '.join(unknown)}; choose from {', '.join(LAYERS)}")
+
     week_dir = out_dir / week_start.isoformat()
     week_dir.mkdir(parents=True, exist_ok=True)
     manifest = {"week_start": week_start.isoformat(), "layers": {}}
-    for key, fmt in LAYERS.items():
+    for key in selected:
+        fmt = LAYERS[key]
         url = f"{UNL_BASE}/{fmt.format(stamp=week_start.strftime('%Y%m%d'))}"
         r = requests.get(url, timeout=60)
         r.raise_for_status()
@@ -66,6 +95,13 @@ def mirror(week_start: date, out_dir: Path) -> dict:
             "bytes": len(r.content),
             "sha256": hashlib.sha256(r.content).hexdigest(),
         }
+    # Drop layers left behind by an earlier run with a wider --layers, so the
+    # directory always matches its manifest.
+    kept = {info["file"] for info in manifest["layers"].values()}
+    for stale in week_dir.glob("*.png"):
+        if stale.name not in kept:
+            stale.unlink()
+
     (week_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
     return manifest
 
@@ -74,6 +110,17 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--date", type=lambda s: datetime.strptime(s, "%Y-%m-%d").date())
     p.add_argument("--out", type=Path, default=None)
+    p.add_argument(
+        "--layers",
+        type=lambda s: [x.strip() for x in s.split(",") if x.strip()],
+        default=None,
+        help=f"comma-separated subset of {', '.join(LAYERS)} (default: all)",
+    )
+    p.add_argument(
+        "--prune",
+        action="store_true",
+        help="remove previously mirrored weeks from --out, keeping only this one",
+    )
     return p.parse_args()
 
 
@@ -83,9 +130,15 @@ def main():
     out_dir = args.out or (repo_root / "pipeline" / "data" / "unl")
     week = args.date or probe_latest()
     print(f"[ok] mirroring UNL maps for week {week.isoformat()}")
-    manifest = mirror(week, out_dir)
+    manifest = mirror(week, out_dir, args.layers)
     for key, info in manifest["layers"].items():
         print(f"  {key}: {info['file']} ({info['bytes'] / 1024:.1f} KB)")
+
+    if args.prune:
+        # Only after a fully successful mirror, so a failed run never leaves
+        # the out dir empty.
+        for name in prune_other_weeks(out_dir, week):
+            print(f"[ok] pruned old week {name}")
 
     # Write a top-level pointer so the frontend can find the latest week.
     pointer_path = repo_root / "data" / "unl-latest.json"

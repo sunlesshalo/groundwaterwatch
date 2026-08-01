@@ -41,10 +41,36 @@ uv run python -m pipeline.run --date 2026-01-26
 
 # inspect NetCDF schema only (no zonal stats)
 uv run python -m pipeline.run --date 2026-01-26 --inspect
+
+# catch the archive up from the newest weekly_*.json to the archive cutoff
+uv run python -m pipeline.backfill --since-last-weekly
 ```
 
 Outputs land in `/data/weekly_<YYYY-MM-DD>.json`. Raw `.nc4` files are cached
-in `/pipeline/data/` and gitignored.
+in `/pipeline/data/` and gitignored. `backfill` also recompiles
+`/data/timeseries.json`, which is what the frontend reads.
+
+### UNL operational maps
+
+The homepage shows NASA's official current-week map alongside our archive-derived
+figures. The mirror **must** write into the site's public directory — the web
+build reads `/data/unl-latest.json` and fails if the week it names has no
+mirrored PNG:
+
+```sh
+# what the weekly job runs: only the layer the site renders, one week retained
+uv run python -m pipeline.unl_mirror --out ../web/public/maps --layers gws --prune
+
+# full archival mirror (all three layers, every week kept) to the gitignored dir
+uv run python -m pipeline.unl_mirror
+```
+
+`--layers gws --prune` is what keeps `web/public/maps/` at ~350 KB instead of
+growing ~1 MB a week. The two unused layers are one command away if a
+root-zone or surface soil-moisture page is ever built. A mirrored week
+directory always matches its `manifest.json`; `--prune` runs only after every
+selected layer downloads, so a UNL outage leaves the previous week in place
+rather than emptying the directory.
 
 ## Output schema
 
