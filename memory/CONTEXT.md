@@ -115,6 +115,9 @@ find.
   - New `pipeline/verify_operational.py`: measures operational vs archive.
   - `docs/path-b-plan.md` rewritten around the measurements.
   - Trend-chart end label now reads `Románia 6/100` and no longer clips.
+  - Checkpoint sweep caught `verify_operational --annual` being inert
+    (`store_true` with `default=True` can never be switched off, and the
+    docstring advertised it). Replaced with `--no-annual`.
 
 - **Verified:**
   - EU and CONUS feeds publish in lockstep across the 8 weeks to 2026-07-27.
@@ -124,6 +127,14 @@ find.
   - Mirror re-fetched after the source swap, then skipped on the second run.
   - Trend label rasterised and measured: worst case `Magyarország 100/100`
     is 129.3px ending at x=813.3 inside a 820-wide viewBox.
+  - **Live after deploy** (run 30710225912): the served map's sha256 matches
+    the EU download byte-for-byte, all 10 routes return 200, end labels carry
+    `/100` in all three locales, and the methodology page shows both baselines.
+  - Checkpoint regression sweep: all 11 pipeline modules import; mirror skips
+    on re-run; freshness 0 weeks behind; 10 routes build; `timeseries.json`
+    untouched this session (so no operational data leaked into the archive);
+    working tree still clean after every command, i.e. the runs really are
+    side-effect free.
 
 - **Next:** unchanged — native-review the RO/HU copy. Deliberately did **not**
   wire the operational numbers into the site, because that needs new EN/RO/HU

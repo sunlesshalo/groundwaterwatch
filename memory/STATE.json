@@ -3,7 +3,7 @@
   "description": "Public dashboard tracking groundwater depletion in Romania and Hungary from NASA GRACE-FO data assimilation, at NUTS-2 resolution.",
   "created": "2026-06-05",
   "live_url": "https://sunlesshalo.github.io/groundwaterwatch/",
-  "current_focus": "Get a native read of the RO/HU copy. It is the last launch blocker: the secrets are set, the archive workflow has run green end to end, and playback and the charts are browser-verified.",
+  "current_focus": "Get a native read of the RO/HU copy. Still the last launch blocker, and now the only thing between this and a press pitch: as of 2026-08-01 the homepage shows NASA's Europe map (it was showing the contiguous US), the charts carry units, both data workflows are green, and everything is verified live. Two lower-priority items are queued behind it: the GitHub Actions Node 20 deprecation (bump as its own change - the Pages actions move together and a bad bump breaks publishing), and confirming the deploy ref fix under a real workflow_call, which can only happen when the bot itself commits on a Monday archive run.",
   "features": [
     {
       "name": "data-pipeline",

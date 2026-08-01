@@ -11,7 +11,7 @@ through the *same* pipeline.zonal.aggregate the archive goes through, then diff
 per region against data/timeseries.json.
 
     uv run python -m pipeline.verify_operational
-    uv run python -m pipeline.verify_operational --recent 26 --annual
+    uv run python -m pipeline.verify_operational --recent 52 --no-annual
 
 Reports median / p90 / max absolute difference and the signed bias, split by
 recent weeks (the join point, where splicing would happen) and by year (drift).
@@ -71,7 +71,12 @@ def describe(diffs: list[float]) -> str:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--recent", type=int, default=26, help="most recent archive weeks to test")
-    p.add_argument("--annual", action="store_true", default=True)
+    p.add_argument(
+        "--no-annual",
+        dest="annual",
+        action="store_false",
+        help="skip the one-week-per-year drift sample and test only recent weeks",
+    )
     p.add_argument("--cache", type=Path, default=DATA_DIR / "operational")
     args = p.parse_args()
 
