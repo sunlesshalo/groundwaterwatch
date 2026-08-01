@@ -288,3 +288,74 @@ the way to hover cards, pinning and chart scrubbing.
   reverse lookup, so it inherits from the first.
 - The `Sparkline` gradient id is a hash of its own values, not a random id — a
   random one would make every build emit a different page for identical data.
+
+## 2026-08-01 (fifth) — Legend wrap, and the design pass was never live
+
+Started as a one-line CSS complaint and turned up a deploy gap. Frontend only;
+one file changed (`web/public/styles.css`, +43/−3).
+
+- **Completed:**
+  - **The band legend no longer orphans its last swatch.** Six bands never fit
+    one row under the hero map in *any* locale — 740px in English, 778 in
+    Romanian, 838 in Hungarian, against the map column's 720. The flex row
+    broke after "abnormally dry" and stranded "near normal" alone underneath.
+    The comment above the rule asserted English cleared one line; it never did,
+    and now carries the measured numbers.
+  - Three regimes, each chosen by what actually fits: **phone** — one column,
+    name left and threshold flush right against a shared edge; **34–62rem** —
+    2–3 aligned columns, since nothing fits one row at 674–754px; **62rem up** —
+    back to one row *except* the hero map's own legend, because the
+    country-page map (1024px) and chart panels (901–980px) clear 838px while
+    the hero map, squeezed beside the headline column at 487–720px, does not.
+  - Two columns are impossible on a phone: half a row is 171px at 390 and 156px
+    at 360, against Hungarian's 195px "a szokásosnál szárazabb (≤ 30)". The
+    alternatives were dropping the thresholds or taking the type under 10px, so
+    the single column was made to look deliberate instead.
+  - **Pushed `464e81b`, which had been sitting unpushed** — see below.
+
+- **Verified:**
+  - 336 legend instances over 6 pages × 3 locales × 28 widths (280–1920), run
+    against **the live site** after deploy, not just locally: no orphaned rows,
+    no label overflowing its container or colliding with its neighbour,
+    thresholds sharing one right edge in every single-column case, no
+    horizontal page overflow.
+  - Readouts confirmed live on hover, keyboard focus **and touch tap** (CDP
+    `Input.dispatchTouchEvent`), EN and HU, desktop and phone. `titlesLeft=0`
+    confirms the native `<title>` removal still runs.
+  - The 96-card hover sweep was re-run after the CSS change: every band pill
+    one line, inside its card.
+
+- **Blockers:** unchanged. Native RO/HU read is still the launch blocker.
+
+- **Next:** native-review the RO/HU copy (four design-pass strings included).
+
+### Landmines from this session
+
+- **A clean working tree is not a deployed tree.** The whole design pass
+  (`464e81b`) was committed and unpushed for about an hour while the live site
+  served the build before it — no client script, no `.map-region`, no
+  `.readout`. It presented as "there are no tooltips". Before debugging
+  anything reported broken *on the live site*, run `git fetch -q origin && git
+  log origin/main..main --oneline` and `gh run list`. A local `npm run build`
+  proves nothing about production.
+- **A reused headless Chrome `--user-data-dir` caches across launches.** Right
+  after the deploy the CDP probe still reported the old DOM while `curl` showed
+  the new markup — which read as a failed deploy. Send
+  `Network.setCacheDisabled` or delete the profile dir before checking a live
+  URL.
+- **Media queries add no specificity.** The first version of the phone legend
+  rule did nothing, because the base `.legend-item { display: inline-flex }`
+  sits *below* it in the file and won on source order. The phone block now
+  lives below those base rules with a comment saying it must stay there.
+- **Scroll the target into view *before* dispatching a synthetic hover.** Doing
+  it afterwards made the trend and heatmap readouts look dead when they were
+  fine — the pointer landed thousands of pixels off-screen. Nearly logged two
+  bugs that did not exist.
+- The 3px horizontal overflow at a 280px viewport is the **trend chart's
+  axis**, not the legend, and predates this change — confirmed by stashing and
+  rebuilding on the previous commit. Below any real phone (smallest common is
+  320), so left alone.
+- The **Node 20 deprecation now fires as an annotation on every deploy**:
+  `actions/checkout@v4`, `configure-pages@v5`, `setup-node@v4` and
+  `upload-artifact@v4` are all being forced onto Node 24. Still queued as its
+  own change, but it is no longer theoretical.
