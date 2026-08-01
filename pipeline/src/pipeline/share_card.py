@@ -85,6 +85,9 @@ def build_svg(timeseries: dict, mapdata: dict) -> tuple[str, str]:
   <rect x="{map_x - 24}" y="0" width="{WIDTH - map_x + 24}" height="{HEIGHT}" fill="{MAP_BG}"/>
   <rect x="0" y="{HEIGHT - 10}" width="{WIDTH}" height="10" fill="#6e1f1f"/>
 
+  <!-- Every line is wrapped by hand: SVG <text> does not reflow, and the text
+       column has to stay left of the map panel, which starts at map_x - 24.
+       Do not re-join these lines without re-measuring the rendered width. -->
   <g font-family="{escape(FONT)}">
     <text x="72" y="96" font-size="23" font-weight="700" letter-spacing="3.4" fill="{INK_SOFT}">GROUNDWATERWATCH</text>
 
@@ -93,11 +96,12 @@ def build_svg(timeseries: dict, mapdata: dict) -> tuple[str, str]:
     <text x="72" y="338" font-size="35" font-weight="600" fill="{INK}">and Hungary sit at or below</text>
     <text x="72" y="384" font-size="35" font-weight="600" fill="{INK}">the 2nd percentile</text>
 
-    <text x="72" y="446" font-size="24" fill="{INK_SOFT}">of NASA&#8217;s 1948&#8211;2014 groundwater baseline.</text>
+    <text x="72" y="438" font-size="24" fill="{INK_SOFT}">of NASA&#8217;s 1948&#8211;2014</text>
+    <text x="72" y="470" font-size="24" fill="{INK_SOFT}">groundwater baseline.</text>
 
-    <line x1="72" y1="492" x2="496" y2="492" stroke="{LINE}" stroke-width="2"/>
-    <text x="72" y="530" font-size="23" fill="{INK_SOFT}">Week of {escape(pretty_week)}</text>
-    <text x="72" y="564" font-size="23" fill="{INK_SOFT}">NASA GRACE-FO data assimilation</text>
+    <line x1="72" y1="500" x2="496" y2="500" stroke="{LINE}" stroke-width="2"/>
+    <text x="72" y="538" font-size="23" fill="{INK_SOFT}">Week of {escape(pretty_week)}</text>
+    <text x="72" y="572" font-size="23" fill="{INK_SOFT}">NASA GRACE-FO data assimilation</text>
   </g>
 
   <g transform="translate({map_x}, {map_y:.1f}) scale({scale})">
