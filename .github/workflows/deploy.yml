@@ -27,7 +27,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Pinned to main rather than the default github.sha. Under workflow_call
+      # the default is the SHA that triggered the run, which for the data
+      # workflows is frozen *before* the bot pushes its data commit — so the
+      # deploy would publish the previous week's tree and the site would lag
+      # one refresh cycle behind the archive.
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-node@v4
         with:
