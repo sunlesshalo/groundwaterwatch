@@ -45,14 +45,14 @@ const longestStreak = consecutiveWeeksAtOrBelow(worstRegion, ts.weeks, 5);
   <h2>{s.countryMapHeading(formatDate(lang, latest))}</h2>
   <RegionMap regions={regions} week={latest} focus={country} lang={lang} timelapse />
 
+  <h2>{s.countryTableHeading(formatDate(lang, latest))}</h2>
+  <RegionTable regions={regions} weeks={ts.weeks} lang={lang} />
+
+  <p style="font-size: 0.85rem; color: var(--ink-soft);">{s.tableNote}</p>
+
   <h2>{s.trendHeading}</h2>
   <TrendChart lang={lang} country={country} />
 
   <h2>{s.heatmapHeading}</h2>
   <SeasonHeatmap lang={lang} country={country} />
-
-  <h2>{s.countryTableHeading(formatDate(lang, latest))}</h2>
-  <RegionTable regions={regions} weeks={ts.weeks} lang={lang} />
-
-  <p style="font-size: 0.85rem; color: var(--ink-soft);">{s.tableNote}</p>
 </Base>
