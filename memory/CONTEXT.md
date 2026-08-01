@@ -95,7 +95,73 @@ Closed every blocker from the session above except the native translation read.
   on the runners). Do the Actions bump as its own change; the Pages actions
   move together and a bad bump breaks publishing.
 
+## 2026-08-01 (third) — The homepage map was the wrong continent
+
+Started from a question about a chart label and turned into a launch-blocking
+find.
+
+- **Completed:**
+  - **The "NASA's current map" on the homepage was the contiguous United
+    States**, in all three locales, directly under the RO/HU charts.
+    `unl_mirror` pointed at UNL's `/data/Web/` tree, which is the CONUS
+    product. Switched to the EU cut of the global run (see landmines).
+  - `is_current()` now also compares the pointer's recorded URLs against the
+    URLs today's config would build, so changing the source invalidates the
+    cache instead of skipping forever.
+  - Methodology (both `docs/methodology.md` and the public page) now states
+    that the map and the regional numbers use different baselines.
+  - New `pipeline/operational.py`: ingests UNL's operational percentile
+    GeoTIFF and runs it through the *same* `zonal.aggregate` as the archive.
+  - New `pipeline/verify_operational.py`: measures operational vs archive.
+  - `docs/path-b-plan.md` rewritten around the measurements.
+  - Trend-chart end label now reads `Románia 6/100` and no longer clips.
+
+- **Verified:**
+  - EU and CONUS feeds publish in lockstep across the 8 weeks to 2026-07-27.
+  - The mirrored PNG's sha256 matches the EU download byte-for-byte in `dist`.
+  - Grids align exactly: per-region `valid_cells` from the operational GeoTIFF
+    match the archive (HU11 = 1, HU12 = 13, …), so the comparison is cell-for-cell.
+  - Mirror re-fetched after the source swap, then skipped on the second run.
+  - Trend label rasterised and measured: worst case `Magyarország 100/100`
+    is 129.3px ending at x=813.3 inside a 820-wide viewBox.
+
+- **Next:** unchanged — native-review the RO/HU copy. Deliberately did **not**
+  wire the operational numbers into the site, because that needs new EN/RO/HU
+  copy and would enlarge the very blocker we are trying to close.
+
 ### Landmines worth remembering
+
+- **UNL publishes two trees and the obvious one is wrong for us.**
+  `/data/Web/` is the 0.125° contiguous-US product. `/globaldata/<YYYYMMDD>/`
+  is the 0.25° global run, cut into GLOBAL, EU, AF, AS, AU, NA, SA and INDIA.
+  We want `GRACE_GWS_EU_<stamp>.png`. The EU render also carries NASA branding,
+  a title, the date and the colour scale, where the CONUS file is a bare map.
+- **A cache keyed only on "week + files exist" cannot notice that the source
+  changed.** That is why the CONUS map survived: after any swap of
+  `UNL_BASE`/`LAYERS` the week still matched and `gws.png` still existed, so
+  the daily job would have skipped forever while serving the old imagery.
+  `is_current()` now compares recorded URLs too. Any future feed change must
+  keep that property or it will silently serve stale data.
+- **Never splice the operational series onto the archive series.** They are
+  baselined 1948-2012 and 1948-2014 respectively. Measured over 768
+  region-weeks: median absolute difference 1.44 percentile points, p90 7.05,
+  max 24.5 — against the original plan's own tolerance of < 1. Worse, the
+  disagreement is **seasonal** (operational reads wetter every July from 2003
+  to 2024, drier in pre-2020 Januaries), which would poison precisely the two
+  views built to remove seasonality: the 52-week rolling mean and the
+  year × month heatmap.
+- **Current agreement between the two products is an illusion of saturation.**
+  At the join point the median difference is only 0.14 points — because RO/HU
+  are pinned near percentile 0 by the drought, where two products cannot
+  disagree. p90 in that same window is 5.35 and max 17.38. A splice would look
+  seamless today and break later, once published and quoted.
+- The operational GeoTIFF contains isolated out-of-range cells:
+  `gws_perc_025deg_GL_20250707.tif` has exactly one at -46.721 (central China).
+  `open_operational_grid` drops them and warns, but raises above 100 cells or
+  0.1%.
+- Chart end labels are 11px `font-weight: 600` over a Georgia stack, and
+  Georgia ships **no semibold**, so browsers resolve it to Georgia **Bold** —
+  measure with Bold, not Regular. Regular would have said the HU label fit.
 
 - `data/weekly_*.json` are gitignored (one is grandfathered in). A fresh
   checkout has almost none, so `backfill` resumes from `timeseries.json` and

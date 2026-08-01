@@ -24,7 +24,7 @@
       "description": "Daily UNL operational map refresh, 06:23 UTC, idempotent, no secrets needed.",
       "status": "passing",
       "verified": true,
-      "notes": "Ran green in CI in 23s: skipped correctly as already current, freshness passed, build passed, and it made no commit. Origin unchanged."
+      "notes": "Ran green in CI in 23s: skipped correctly as already current, freshness passed, build passed, and it made no commit. FIXED 2026-08-01: was mirroring UNL's /data/Web/ tree, which is the CONTIGUOUS US product - the homepage showed a map of the United States under 'NASA's current map' in all three locales. Now pulls the EU cut of the global run, /globaldata/<stamp>/GRACE_GWS_EU_<stamp>.png. EU and CONUS verified publishing in lockstep across the 8 weeks to 2026-07-27; dist PNG sha matches the EU download. is_current() now also compares recorded URLs, because week+files-exist alone could not detect the source change and would have skipped forever."
     },
     {
       "name": "workflow-archive",
@@ -80,7 +80,14 @@
       "description": "Trailing 52-week trend line per country and a year x month heatmap, server-rendered SVG.",
       "status": "passing",
       "verified": true,
-      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. The 12-column heatmap confirmed in a real browser by the user on 2026-08-01. On country pages the charts now sit BELOW the region table, matching the homepage order."
+      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. The 12-column heatmap confirmed in a real browser by the user on 2026-08-01. On country pages the charts now sit BELOW the region table, matching the homepage order. 2026-08-01: trend end labels now carry a unit ('Románia 6/100') - the bare number could read as a rank or a score out of 10. Sizing at the same time fixed a latent clip: labels are 11px font-weight:600 over Georgia, which has no semibold, so it resolves to Georgia BOLD, at which 'Magyarország 1' was 87.8px against 82px available. viewBox widened 760->820 and PAD.right 92->146 so plot width is unchanged (634->640) and the worst case 'Magyarország 100/100' ends at 813.3 of 820."
+    },
+    {
+      "name": "operational-ingest",
+      "description": "Read UNL's operational percentile GeoTIFF and aggregate it to NUTS-2 through the same zonal.aggregate the archive uses.",
+      "status": "passing",
+      "verified": true,
+      "notes": "pipeline/operational.py + pipeline/verify_operational.py. Grid alignment proven: per-region valid_cells match the archive exactly. NOT wired into the site, deliberately - a current-week readout needs new EN/RO/HU copy and the RO/HU translations are still awaiting a native read. MUST NOT be spliced onto the archive series: measured over 768 region-weeks the two products differ by median 1.44 percentile points, p90 7.05, max 24.5, against the original plan's own <1 tolerance, and the disagreement is SEASONAL, which would poison the rolling mean and the year x month heatmap specifically. Present agreement looks good (median 0.14 at the join) only because RO/HU are saturated near percentile 0 in the current drought. Full write-up in docs/path-b-plan.md."
     },
     {
       "name": "embed-widget",

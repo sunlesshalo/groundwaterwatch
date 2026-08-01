@@ -31,9 +31,16 @@ const series = country
       { code: "HU", name: s.countryName.HU, colour: "#eb6834", values: rollingMean(weeklySeries(ts, "HU"), WINDOW) },
     ];
 
-const W = 760;
+const W = 820;
 const H = 300;
-const PAD = { top: 14, right: 92, bottom: 30, left: 34 };
+// right: sized to the widest end label the scale can produce. Measured at 11px
+// Georgia Bold — what font-weight:600 resolves to, since Georgia ships no
+// semibold — "Magyarország 100/100" is 129.3px. Plus the 10px gap off the end
+// point and a small margin: 146. At the previous 92 the label had 82px and HU
+// clipped ~6px into the viewBox edge.
+// W went 760 -> 820 at the same time so widening the margin costs no plot
+// width: 760-34-92 = 634, 820-34-146 = 640.
+const PAD = { top: 14, right: 146, bottom: 30, left: 34 };
 const plotW = W - PAD.left - PAD.right;
 const plotH = H - PAD.top - PAD.bottom;
 
@@ -101,8 +108,11 @@ const ends = series.map((sr) => {
     {ends.map((e) => (
       <g>
         <circle cx={x(e.i)} cy={y(e.v)} r="4" fill={e.colour} stroke="#f7f4ec" stroke-width="2" />
+        {/* "/100" rather than a translated word for "percentile": it ties the
+            number straight to the 0-100 gridlines beside it, reads the same in
+            all three locales, and adds no string needing a native review. */}
         <text x={x(e.i) + 10} y={y(e.v) + 4} class="chart-endlabel">
-          {e.name} {formatNumber(lang, e.v, 0)}
+          {e.name} {formatNumber(lang, e.v, 0)}/100
         </text>
       </g>
     ))}

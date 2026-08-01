@@ -12,6 +12,11 @@ dependencies = [
     "shapely>=2.0",
     "regionmask>=0.12",
     "pyogrio>=0.9",
+    # Reads UNL's operational float32 GeoTIFF (pipeline.operational). Chosen
+    # over rasterio/rioxarray because the grid is a plain unprojected 0.25 deg
+    # raster whose georeferencing we read from tags once and hard-code, so the
+    # full GDAL stack would be a large dependency for a decode we can do here.
+    "pillow>=10.0",
 ]
 
 [build-system]
