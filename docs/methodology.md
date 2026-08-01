@@ -20,6 +20,17 @@ The product is generated at NASA Goddard Space Flight Center by assimilating GRA
 > meteorological dataset (which ends in 2012). V3.0 is forced by ECMWF data
 > instead — see the forcing note above. Do not quote 1948–2012 for this product,
 > and note the baseline is ~66 years, not 75.
+>
+> **But the map on the homepage is baselined 1948–2012, and says so.** The
+> current-week map we mirror is the operational global run (Europe cut), and its
+> own footer reads "Wetness percentiles are relative to the period 1948-2012".
+> That is the older baseline described in the paragraph above. So the homepage
+> carries both figures: 1948–2012 rendered into the map image, 1948–2014 behind
+> the NUTS-2 numbers. This is not an inconsistency we introduced — they are two
+> NASA products on two release lines, and neither one is ours to restate. Read
+> the map as the current picture and the regional series as the archive-grade
+> record. Do not difference a map colour against a NUTS-2 value and expect them
+> to agree to the percentile point.
 - Root-zone soil moisture and surface soil moisture percentiles are available and may be added later.
 
 ## Spatial resolution

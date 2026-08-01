@@ -3,10 +3,10 @@
   "layers": {
     "gws": {
       "name": "Groundwater storage percentile",
-      "url": "https://nasagrace.unl.edu/data/Web/GRACE_GWS_20260727.png",
+      "url": "https://nasagrace.unl.edu/globaldata/20260727/GRACE_GWS_EU_20260727.png",
       "file": "gws.png",
-      "bytes": 352349,
-      "sha256": "c796aff8f24d5cf1ae79df58e8675e1815715946d38630266db7a5935e7c3940"
+      "bytes": 207816,
+      "sha256": "8f3f9e987eee4197468fe87debf46b0e6d854fdb5f0c45320b0ba8156ca0aa5d"
     }
   }
 }

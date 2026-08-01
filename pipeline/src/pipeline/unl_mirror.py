@@ -2,16 +2,36 @@
 
 UNL/National Drought Mitigation Center publishes the operational GRACE-DA
 percentile maps with ~2-9 day latency. URL pattern:
-  https://nasagrace.unl.edu/data/Web/GRACE_GWS_<YYYYMMDD>.png    (groundwater)
-  https://nasagrace.unl.edu/data/Web/GRACE_RTZSM_<YYYYMMDD>.png  (root-zone)
-  https://nasagrace.unl.edu/data/Web/GRACE_SFSM_<YYYYMMDD>.png   (surface)
+  https://nasagrace.unl.edu/globaldata/<YYYYMMDD>/GRACE_GWS_EU_<YYYYMMDD>.png
+  https://nasagrace.unl.edu/globaldata/<YYYYMMDD>/GRACE_RTZSM_EU_<YYYYMMDD>.png
+  https://nasagrace.unl.edu/globaldata/<YYYYMMDD>/GRACE_SFSM_EU_<YYYYMMDD>.png
+
+**Use the EU cut, not CONUS.** UNL publishes two trees. `/data/Web/` is the
+contiguous-US product at 0.125 degree; `/globaldata/<stamp>/` is the 0.25 degree
+global run, cut into GLOBAL, EU, AF, AS, AU, NA, SA and INDIA. This site is
+about Romania and Hungary, so only the EU cut belongs on it — mirroring
+`/data/Web/` put a map of Kansas on the front page under the heading "NASA's
+current map". The EU render is also the better artifact: it carries NASA
+branding, a title, the date, the colour scale and the resolution note, where
+the CONUS file is a bare unlabelled map.
+
+The two trees publish in lockstep — verified across the eight weeks from
+2026-06-08 to 2026-07-27, every one of which had CONUS, EU and the GeoTIFF all
+returning 200 for the same stamp. So the probe cadence below is unchanged.
 
 Files are Monday-stamped. We probe back from the most recent Monday until we
-get a 200, then mirror the three layers + write a manifest.
+get a 200, then mirror the selected layers + write a manifest.
+
+**Baseline caveat.** The EU render's own footer reads "Wetness percentiles are
+relative to the period 1948-2012" — the operational global stream's baseline,
+which is NOT the 1948-2014 baseline of the GRACEDADM V3.0 archive we ingest for
+the NUTS-2 numbers. Both appear on the homepage, so docs/methodology.md carries
+an explicit note reconciling them. Do not quietly align one to the other.
 
 This is the Path C approach: show NASA's official current map alongside our
-own archive-derived NUTS-2 trend chart. Path B (compute our own percentiles
-from the EP daily product) is the v2 upgrade documented in docs/path-b-plan.md.
+own archive-derived NUTS-2 trend chart. See docs/path-b-plan.md — note that
+`/globaldata/<stamp>/gws_perc_025deg_GL_<stamp>.tif` is the operational
+percentile grid itself, which changes what Path B needs to do.
 """
 
 from __future__ import annotations
@@ -26,11 +46,12 @@ from pathlib import Path
 
 import requests
 
-UNL_BASE = "https://nasagrace.unl.edu/data/Web"
+UNL_BASE = "https://nasagrace.unl.edu/globaldata"
+# The stamp appears twice: once as the directory, once in the filename.
 LAYERS = {
-    "gws": "GRACE_GWS_{stamp}.png",
-    "rtzsm": "GRACE_RTZSM_{stamp}.png",
-    "sfsm": "GRACE_SFSM_{stamp}.png",
+    "gws": "{stamp}/GRACE_GWS_EU_{stamp}.png",
+    "rtzsm": "{stamp}/GRACE_RTZSM_EU_{stamp}.png",
+    "sfsm": "{stamp}/GRACE_SFSM_EU_{stamp}.png",
 }
 LAYER_NAMES = {
     "gws": "Groundwater storage percentile",
@@ -39,13 +60,16 @@ LAYER_NAMES = {
 }
 
 
+def layer_url(key: str, week: date) -> str:
+    return f"{UNL_BASE}/{LAYERS[key].format(stamp=week.strftime('%Y%m%d'))}"
+
+
 def probe_latest(today: date | None = None, max_lookback_weeks: int = 12) -> date:
     today = today or date.today()
     monday = today - timedelta(days=today.weekday())
     for weeks_back in range(max_lookback_weeks):
         candidate = monday - timedelta(weeks=weeks_back)
-        url = f"{UNL_BASE}/{LAYERS['gws'].format(stamp=candidate.strftime('%Y%m%d'))}"
-        r = requests.head(url, timeout=10, allow_redirects=True)
+        r = requests.head(layer_url("gws", candidate), timeout=10, allow_redirects=True)
         if r.status_code == 200:
             return candidate
     raise RuntimeError(f"No UNL map found in the {max_lookback_weeks} weeks before {monday}")
@@ -81,11 +105,18 @@ def resolve_layers(layers: Sequence[str] | None) -> list[str]:
 
 
 def is_current(pointer_path: Path, out_dir: Path, week: date, layers: Sequence[str]) -> bool:
-    """True when the pointer already names `week` and every selected layer is on disk.
+    """True when the pointer already names `week`, was fetched from the URLs we
+    would use today, and every selected layer is on disk.
 
     Lets the daily job be a no-op on the six days out of seven when UNL has not
     published anything new, instead of re-downloading and rewriting the pointer's
     `fetched_at` — which would commit a no-change diff every single day.
+
+    The URL comparison is what makes a change to UNL_BASE/LAYERS self-healing.
+    Without it, week and filenames both still match after a source swap, so the
+    job would skip forever and keep serving imagery from the old source — which
+    is exactly how the CONUS map survived on the homepage. Changing where we
+    mirror from must invalidate the cache.
     """
     if not pointer_path.exists():
         return False
@@ -94,6 +125,9 @@ def is_current(pointer_path: Path, out_dir: Path, week: date, layers: Sequence[s
     except json.JSONDecodeError:
         return False
     if pointer.get("week_start") != week.isoformat():
+        return False
+    recorded = pointer.get("layers") or {}
+    if any(recorded.get(key) != layer_url(key, week) for key in layers):
         return False
     week_dir = out_dir / week.isoformat()
     return all((week_dir / f"{key}.png").exists() for key in layers)
@@ -106,8 +140,7 @@ def mirror(week_start: date, out_dir: Path, layers: Sequence[str] | None = None)
     week_dir.mkdir(parents=True, exist_ok=True)
     manifest = {"week_start": week_start.isoformat(), "layers": {}}
     for key in selected:
-        fmt = LAYERS[key]
-        url = f"{UNL_BASE}/{fmt.format(stamp=week_start.strftime('%Y%m%d'))}"
+        url = layer_url(key, week_start)
         r = requests.get(url, timeout=60)
         r.raise_for_status()
         out = week_dir / f"{key}.png"
