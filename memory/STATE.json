@@ -1,7 +1,100 @@
 {
   "agent": "groundwaterwatch",
-  "description": "TODO: one-line purpose of this agent.",
+  "description": "Public dashboard tracking groundwater depletion in Romania and Hungary from NASA GRACE-FO data assimilation, at NUTS-2 resolution.",
   "created": "2026-06-05",
-  "current_focus": "TODO: what this session is working on.",
-  "features": []
+  "live_url": "https://sunlesshalo.github.io/groundwaterwatch/",
+  "current_focus": "Set the EARTHDATA_USER/EARTHDATA_PASS repository secrets before the Monday 06:43 UTC archive run, then get a native read of the RO/HU copy.",
+  "features": [
+    {
+      "name": "data-pipeline",
+      "description": "GES DISC ingest, NUTS-2 zonal stats, UNL operational mirror, timeseries compile.",
+      "status": "passing",
+      "verified": true,
+      "notes": "All commands run as documented with PYTHONPATH unset. Archive covers 2003-02-03 to 2026-05-25, 1217 weeks x 16 regions. A full no-op run leaves data byte-identical."
+    },
+    {
+      "name": "backfill-ci-safety",
+      "description": "Resume from timeseries.json and merge on compile, so a checkout without the gitignored weekly files cannot destroy the archive.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Tested against a simulated fresh checkout containing only committed files: resume resolves to 2026-05-25, and a no-op run preserves all 1217 weeks, 16 regions, no duplicates, identical values."
+    },
+    {
+      "name": "workflow-mirror",
+      "description": "Daily UNL operational map refresh, 06:23 UTC, idempotent, no secrets needed.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Ran green in CI in 23s: skipped correctly as already current, freshness passed, build passed, and it made no commit. Origin unchanged."
+    },
+    {
+      "name": "workflow-archive",
+      "description": "Weekly GES DISC archive catch-up, Mondays 06:43 UTC, regenerates the share card.",
+      "status": "in_progress",
+      "verified": false,
+      "notes": "BLOCKED and UNTESTED. Requires EARTHDATA_USER/EARTHDATA_PASS repository secrets, which are not set. It has never run. YAML parses and every step was exercised locally, but the job itself is unverified end to end."
+    },
+    {
+      "name": "workflow-deploy",
+      "description": "GitHub Pages build and deploy; called explicitly by both data workflows.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Green across several runs; all 13 live URLs return 200. Called explicitly because GITHUB_TOKEN pushes do not trigger workflows."
+    },
+    {
+      "name": "computed-lede",
+      "description": "Homepage headline computed from the archive via guarded claim templates; superlatives only appear when true.",
+      "status": "passing",
+      "verified": true,
+      "notes": "All three templates exercised against real archive weeks (rank 1 -> superlative, rank 3 -> ordinal, current -> floor). As-of scoping confirmed to not look ahead."
+    },
+    {
+      "name": "baseline-correction",
+      "description": "Baseline period settled at 1948-2014 for V3.0; '75-year' removed sitewide.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Confirmed against three NASA sources. drought.gov's 1948-2012 describes a pre-V3.0, Princeton-forced release. Reasoning recorded in docs/methodology.md."
+    },
+    {
+      "name": "share-card",
+      "description": "Generated 1200x630 OG card plus absolute social metadata, guarded so a stale card fails the build.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Serves 200 as image/png at 1200x630, ratio 1.905, 107 KB. Build fails when the card for the newest week is missing. Regenerates deterministically."
+    },
+    {
+      "name": "site-i18n",
+      "description": "Plain-language copy in EN/RO/HU. English at root, /ro/ and /hu/ prefixed. Methodology is EN-only by choice.",
+      "status": "passing",
+      "verified": true,
+      "notes": "10 routes build, zero broken internal links, correct hreflang with x-default, per-locale og:locale and canonicals. CAVEAT: translations are machine-authored and have NOT been reviewed by a native speaker."
+    },
+    {
+      "name": "timelapse-playback",
+      "description": "Visitor-controlled playback of all 1217 weeks with 0.5x-4x speed; progressive enhancement over the static map.",
+      "status": "passing",
+      "verified": false,
+      "notes": "Payload, markup and timing verified: 16 columns match 16 rendered paths, no malformed rows, caption date-swap resolves to exactly one match in all three locales, and timing simulated at 60/120 Hz across all speeds lands within 0.1s. NOT verified: click and drag were never exercised in a real browser, since no browser automation was available."
+    },
+    {
+      "name": "charts",
+      "description": "Trailing 52-week trend line per country and a year x month heatmap, server-rendered SVG.",
+      "status": "passing",
+      "verified": true,
+      "notes": "Values cross-checked independently against timeseries.json (heatmap May 2026 = 5.4 both ways; trend endpoints 5.9/1.3). Rasterised and visually inspected for collisions and overflow. Palette validated against the site's own surface. Hover values rely on native SVG <title>, not exercised in a browser."
+    },
+    {
+      "name": "embed-widget",
+      "description": "Per-country iframe embed for press partners (CLAUDE.md v1 scope).",
+      "status": "not_started",
+      "verified": false,
+      "notes": "Not begun. Still listed in v1 scope."
+    },
+    {
+      "name": "domain",
+      "description": "groundwaterwatch.eu purchase and DNS.",
+      "status": "not_started",
+      "verified": false,
+      "notes": "Not purchased. SITE_URL/BASE_PATH make the switch a config change, not a code change."
+    }
+  ]
 }
