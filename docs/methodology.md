@@ -8,7 +8,18 @@ The product is generated at NASA Goddard Space Flight Center by assimilating GRA
 
 ## Variables we use
 
-- **Groundwater Percentile** — the headline metric. Where current groundwater storage falls relative to the same week-of-year across the 1948–2012 baseline. 0 = driest ever observed; 100 = wettest.
+- **Groundwater Percentile** — the headline metric. Where current groundwater storage falls relative to the same week-of-year across the 1948–2014 baseline. 0 = driest ever observed; 100 = wettest.
+
+> **On the baseline period.** NASA's own materials cite two different figures, so
+> to be explicit: **1948–2014 is correct for V3.0**, the version we ingest. The
+> GES DISC catalogue entry for `GRACEDADM_CLSM025GL_7D` V3.0 states percentiles
+> give "the probability of occurrence within the period of record from 1948 to
+> 2014", as does the NASA GRACE-DA-DM entry in the AWS Registry of Open Data.
+> drought.gov still says "1948-2012 for global data"; that describes an earlier
+> release, whose climatology came from a CLSM run forced by the Princeton
+> meteorological dataset (which ends in 2012). V3.0 is forced by ECMWF data
+> instead — see the forcing note above. Do not quote 1948–2012 for this product,
+> and note the baseline is ~66 years, not 75.
 - Root-zone soil moisture and surface soil moisture percentiles are available and may be added later.
 
 ## Spatial resolution
@@ -39,7 +50,7 @@ Country-level scores are area-weighted aggregates of the constituent NUTS-2 regi
 
 ## What this measures
 
-The percentile compares the current state to the same week across the 75-year baseline. A value of 2 means: in only 2% of historical weeks at this time of year was groundwater this depleted or worse.
+The percentile compares the current state to the same week across the 1948–2014 baseline. A value of 2 means: in only 2% of historical weeks at this time of year was groundwater this depleted or worse.
 
 ## What this does not measure
 

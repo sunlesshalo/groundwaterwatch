@@ -40,7 +40,7 @@ workflows.
 
 [GRACEDADM_CLSM025GL_7D V3.0](https://data.nasa.gov/dataset/groundwater-and-soil-moisture-conditions-from-grace-and-grace-fo-data-assimilation-l4-7-da-31ce9) — NASA GES DISC. Weekly cadence, 0.25° resolution, NetCDF format. Coverage Feb 2003 → present. Public domain.
 
-The product publishes pre-computed percentiles vs. a 1948–2012 baseline for groundwater, root-zone soil moisture, and surface soil moisture.
+The product publishes pre-computed percentiles vs. a 1948–2014 baseline for groundwater, root-zone soil moisture, and surface soil moisture. (NASA's materials cite 1948–2012 in places; that describes a pre-V3.0 release — see [docs/methodology.md](docs/methodology.md).)
 
 ## Scope at v1
 
