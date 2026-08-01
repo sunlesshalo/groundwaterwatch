@@ -158,3 +158,9 @@ a:hover { text-decoration: none; }
 .tl-scrub { flex: 1 1 auto; accent-color: var(--extreme); cursor: pointer; }
 .tl-hint { margin: 0.45rem 0 0; font-size: 0.78rem; color: var(--ink-soft); }
 .tl-lead { margin: 0 0 0.5rem; font-size: 0.9rem; color: var(--ink-soft); }
+.tl-speed { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: var(--ink-soft); }
+.tl-speed select { font: inherit; font-size: 0.78rem; padding: 0.2rem 0.3rem; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); cursor: pointer; }
+@media (max-width: 30rem) {
+  .tl-row { flex-wrap: wrap; }
+  .tl-scrub { order: 3; flex-basis: 100%; }
+}

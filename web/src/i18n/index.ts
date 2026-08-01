@@ -122,6 +122,7 @@ interface Strings {
   timelapsePause: string;
   timelapseReplay: string;
   timelapseScrub: string;
+  timelapseSpeed: string;
   timelapseHint: (startYear: number) => string;
 }
 
@@ -207,6 +208,7 @@ const en: Strings = {
   timelapsePause: "Pause",
   timelapseReplay: "Play again",
   timelapseScrub: "Week",
+  timelapseSpeed: "Speed",
   timelapseHint: (startYear) =>
     `Press play to see every week since ${startYear}, or drag the slider to any point yourself.`,
 };
@@ -293,6 +295,7 @@ const ro: Strings = {
   timelapsePause: "Pauză",
   timelapseReplay: "Reia",
   timelapseScrub: "Săptămâna",
+  timelapseSpeed: "Viteză",
   timelapseHint: (startYear) =>
     `Apăsați „Pornește” pentru a vedea fiecare săptămână din ${startYear} încoace sau trageți cursorul unde doriți.`,
 };
@@ -379,6 +382,7 @@ const hu: Strings = {
   timelapsePause: "Szünet",
   timelapseReplay: "Újra",
   timelapseScrub: "Hét",
+  timelapseSpeed: "Sebesség",
   timelapseHint: (startYear) =>
     `Nyomja meg az Indítás gombot, és végignézheti ${startYear} óta minden hetet — vagy húzza a csúszkát oda, ahová szeretné.`,
 };

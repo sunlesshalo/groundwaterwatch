@@ -143,6 +143,15 @@ const bandRanges: Record<string, string> = {
           data-tl-scrub
           aria-label={str.timelapseScrub}
         />
+        <label class="tl-speed">
+          <span class="tl-speed-label">{str.timelapseSpeed}</span>
+          <select data-tl-speed>
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </label>
       </div>
       <p class="tl-hint" id="tl-hint">{str.timelapseHint(Number(playback.weeks[0].slice(0, 4)))}</p>
       <script type="application/json" data-tl-json set:html={JSON.stringify(playback)}></script>
@@ -194,7 +203,7 @@ const bandRanges: Record<string, string> = {
   ];
   const NORMAL = "#6a8e6f";
   const NO_DATA = "#e7e1d3";
-  const FRAME_MS = 28; // ~34s for the full 1217-week archive
+  const BASE_MS = 28; // ms per week at 1x -> ~34s for the full archive
 
   function colour(tenths: number): string {
     if (tenths < 0) return NO_DATA;
@@ -208,6 +217,7 @@ const bandRanges: Record<string, string> = {
     const json = root.querySelector<HTMLScriptElement>("[data-tl-json]");
     const play = root.querySelector<HTMLButtonElement>("[data-tl-play]");
     const scrub = root.querySelector<HTMLInputElement>("[data-tl-scrub]");
+    const speedSel = root.querySelector<HTMLSelectElement>("[data-tl-speed]");
     const caption = figure?.querySelector<HTMLElement>("[data-tl-caption]");
     if (!figure || !json || !play || !scrub) continue;
 
@@ -222,7 +232,10 @@ const bandRanges: Record<string, string> = {
     const renderedDate = fmt.format(new Date(data.weeks[last] + "T00:00:00Z"));
 
     let i = last;
-    let timer: number | null = null;
+    let speed = 1;
+    let raf: number | null = null;
+    let prev = 0;
+    let carry = 0; // ms of playback time not yet spent on a whole week
 
     function draw(index: number) {
       const row = data.v[index];
@@ -237,29 +250,56 @@ const bandRanges: Record<string, string> = {
     }
 
     function stop() {
-      if (timer !== null) clearInterval(timer);
-      timer = null;
+      if (raf !== null) cancelAnimationFrame(raf);
+      raf = null;
+      prev = 0;
+      carry = 0;
       play.textContent = i >= last ? data.labels.replay : data.labels.play;
       play.removeAttribute("data-playing");
     }
 
-    function start() {
-      // Starting from the end means replaying, not sitting still.
-      if (i >= last) i = 0;
-      play.textContent = data.labels.pause;
-      play.setAttribute("data-playing", "");
-      timer = window.setInterval(() => {
+    // Time-based rather than one week per timer tick: at 4x the interval would
+    // fall under the browser's timer floor and simply stutter, and on a 120Hz
+    // screen a fixed interval drifts. Advancing by elapsed time means the
+    // duration is honest at every speed.
+    function tick(now: number) {
+      if (!prev) prev = now;
+      carry += now - prev;
+      prev = now;
+      const perWeek = BASE_MS / speed;
+      let moved = false;
+      while (carry >= perWeek && i < last) {
         i++;
-        draw(i);
-        if (i >= last) stop();
-      }, FRAME_MS);
+        carry -= perWeek;
+        moved = true;
+      }
+      if (moved) draw(i);
+      if (i >= last) { stop(); return; }
+      raf = requestAnimationFrame(tick);
     }
 
-    play.addEventListener("click", () => (timer === null ? start() : stop()));
+    function start() {
+      // Starting from the end means replaying, not sitting still.
+      if (i >= last) { i = 0; draw(i); }
+      play.textContent = data.labels.pause;
+      play.setAttribute("data-playing", "");
+      prev = 0;
+      carry = 0;
+      raf = requestAnimationFrame(tick);
+    }
+
+    play.addEventListener("click", () => (raf === null ? start() : stop()));
+
     scrub.addEventListener("input", () => {
       stop();
       i = Number(scrub.value);
       draw(i);
+    });
+
+    // Speed changes apply mid-playback without restarting.
+    speedSel?.addEventListener("change", () => {
+      speed = Number(speedSel.value) || 1;
+      carry = 0;
     });
   }
 </script>
