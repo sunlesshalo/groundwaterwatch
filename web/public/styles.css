@@ -543,9 +543,15 @@ strong { font-weight: 700; }
 }
 
 /* --------------------------------------------------------------- legend */
-/* Six bands at 0.72rem clear one line under the hero map in English. Longer
- * band names (hu: "a szokásosnál szárazabb") wrap to two, which is fine — the
- * order still reads driest-first. */
+/* Six bands do NOT clear one line under the hero map in any locale: at 0.72rem
+ * they need 740px in English, 778 in Romanian and 838 in Hungarian against the
+ * map column's 720. Flex-wrapping them left a single orphan swatch ("near
+ * normal") stranded on a second row, breaking right after "abnormally dry".
+ * Grid tracks wider than the longest label (hu "a szokásosnál szárazabb
+ * (≤ 30)" = 195px) wrap to aligned columns instead, which reads as a key
+ * rather than as a broken line. 6 items over 1-3 columns always fills its rows
+ * evenly; a 4-column grid would need an 868px container, which no legend gets.
+ * Phones get their own single-column treatment below. */
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -554,6 +560,21 @@ strong { font-weight: 700; }
   font-family: var(--font-sans);
   font-size: 0.72rem;
   color: var(--ink-soft);
+}
+@media (min-width: 34rem) {
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  }
+}
+/* From 62rem the layout goes two-column and only the hero map's legend is
+ * still too narrow for one row — it is squeezed beside the headline column
+ * (487-720px), while the country-page map (1024px) and the chart panels
+ * (901-980px) all clear Hungarian's 838px. One row beats an aligned grid
+ * wherever it genuinely fits, so everything else goes back to flex. */
+@media (min-width: 62rem) {
+  .legend { display: flex; }
+  .hero-figure .legend { display: grid; }
 }
 .legend-item { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
 .swatch {
@@ -567,6 +588,25 @@ strong { font-weight: 700; }
   font-style: normal;
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
+}
+/* Under 34rem two columns are not available at any honest type size: the
+ * legend gets ~355px at 390 and ~325px at 360, so a half row is 171px and
+ * 156px, while the Hungarian "a szokásosnál szárazabb (≤ 30)" is 195px. The
+ * options were to drop the thresholds or to shrink the type below 10px, and
+ * neither is worth it on a data site. One column instead, laid out as a real
+ * key — swatch, name, then the threshold flush right against a shared edge,
+ * which reads as designed rather than as a list that ran out of room and
+ * keeps every band and its range on a phone. Must stay BELOW the .legend-item
+ * rules above: media queries add no specificity, so a later equal-specificity
+ * rule would silently win. */
+@media (max-width: 33.999rem) {
+  .legend { display: grid; grid-template-columns: 1fr; gap: 0.32rem; }
+  .legend-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.45rem;
+  }
+  .legend-item em { justify-self: end; }
 }
 .caption-source {
   display: block;
