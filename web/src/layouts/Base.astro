@@ -3,7 +3,7 @@ interface Props {
   title: string;
   description?: string;
 }
-import { ogImageHref } from "../lib/data";
+import { ogImageHref, withBase } from "../lib/data";
 
 const { title, description = "Europe's hidden drought, mapped weekly. NASA GRACE-FO groundwater data for Romania and Hungary at NUTS-2 resolution." } = Astro.props;
 
@@ -11,7 +11,10 @@ const { title, description = "Europe's hidden drought, mapped weekly. NASA GRACE
 // reliably, and a card that fails to load is the whole point of the card lost.
 // `site` comes from astro.config.mjs — set SITE_URL when deploying anywhere
 // other than the production domain.
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// Trailing slash on directory paths, so the canonical URL is the one the host
+// actually serves rather than one that 301s — scrapers charge you for the hop.
+const pathname = Astro.url.pathname.endsWith("/") ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const canonical = new URL(pathname, Astro.site).href;
 const ogImage = new URL(ogImageHref(), Astro.site).href;
 ---
 <!doctype html>
@@ -34,15 +37,15 @@ const ogImage = new URL(ogImageHref(), Astro.site).href;
     <meta property="og:image:alt" content="Groundwater percentile map of Romania and Hungary by NUTS-2 region" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={ogImage} />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href={withBase("/styles.css")} />
   </head>
   <body>
     <header class="site-header">
-      <a href="/" class="brand">groundwaterwatch</a>
+      <a href={withBase("/")} class="brand">groundwaterwatch</a>
       <nav>
-        <a href="/ro/">Romania</a>
-        <a href="/hu/">Hungary</a>
-        <a href="/methodology/">Methodology</a>
+        <a href={withBase("/ro/")}>Romania</a>
+        <a href={withBase("/hu/")}>Hungary</a>
+        <a href={withBase("/methodology/")}>Methodology</a>
       </nav>
     </header>
     <main>

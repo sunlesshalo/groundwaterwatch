@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import RegionMap from "../components/RegionMap.astro";
-import { loadTimeseries, regionsForCountry, loadUnlLatest, unlLayerHref } from "../lib/data";
+import { loadTimeseries, regionsForCountry, loadUnlLatest, unlLayerHref, withBase } from "../lib/data";
 import { ledeFacts, ledeClaim } from "../lib/lede";
 
 const ts = loadTimeseries();
@@ -70,8 +70,8 @@ const unlHref = unlLayerHref(unl.week_start);
 
   <h2>Per-country pages</h2>
   <ul>
-    <li><a href="/ro/">Romania</a> — {roRegions} NUTS-2 regions, full {facts.recordYears}-year trend</li>
-    <li><a href="/hu/">Hungary</a> — {huRegions} NUTS-2 regions, full {facts.recordYears}-year trend</li>
+    <li><a href={withBase("/ro/")}>Romania</a> — {roRegions} NUTS-2 regions, full {facts.recordYears}-year trend</li>
+    <li><a href={withBase("/hu/")}>Hungary</a> — {huRegions} NUTS-2 regions, full {facts.recordYears}-year trend</li>
   </ul>
 
   <h2>How to read the percentile</h2>
@@ -86,7 +86,7 @@ const unlHref = unlLayerHref(unl.week_start);
 
   <div class="callout">
     Methodology, sources, and what this dashboard does <em>not</em> measure
-    are on the <a href="/methodology/">methodology page</a>. Please read it
+    are on the <a href={withBase("/methodology/")}>methodology page</a>. Please read it
     before quoting the numbers.
   </div>
 </Base>

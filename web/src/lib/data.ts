@@ -52,6 +52,17 @@ export function loadTimeseries(): Timeseries {
   return JSON.parse(raw) as Timeseries;
 }
 
+/** Prefix a site-absolute path with Astro's configured base.
+ *
+ * Astro rewrites asset URLs it generates itself, but not paths written by hand
+ * in markup or built by our own helpers. Without this, every link 404s on a
+ * GitHub Pages project site, which serves from /<repo>/ rather than the root.
+ */
+export function withBase(pathname: string): string {
+  const base = import.meta.env.BASE_URL || "/";
+  return `${base.replace(/\/$/, "")}${pathname}`;
+}
+
 export type UnlLayer = "gws" | "rtzsm" | "sfsm";
 
 export interface UnlLatest {
@@ -78,7 +89,7 @@ export function unlLayerHref(week: string, layer: UnlLayer = "gws"): string {
         `Run: cd pipeline && uv run python -m pipeline.unl_mirror --out ../web/public/maps`
     );
   }
-  return `/maps/${week}/${layer}.png`;
+  return withBase(`/maps/${week}/${layer}.png`);
 }
 
 /** Site-relative href for the share card of the newest week.
@@ -97,7 +108,7 @@ export function ogImageHref(): string {
         `Run: cd pipeline && uv run python -m pipeline.share_card --out ../web/public/og --prune`
     );
   }
-  return `/og/${week}.png`;
+  return withBase(`/og/${week}.png`);
 }
 
 export function regionsForCountry(country: "RO" | "HU"): Region[] {

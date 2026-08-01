@@ -1,0 +1,66 @@
+name: deploy to GitHub Pages
+
+# Runs on every push to main — including the data commits made by the mirror and
+# archive workflows, so a data refresh publishes itself.
+#
+# NOTE: pushes made with GITHUB_TOKEN do not trigger other workflows, so the
+# bot's data commits will NOT start this deploy on their own. Both data
+# workflows therefore call it explicitly via workflow_call.
+on:
+  push:
+    branches: [main]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Independent of the data-refresh group: a deploy never pushes commits, so it
+# cannot race the data jobs. One deploy at a time, newest wins.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: actions/configure-pages@v5
+        id: pages
+
+      # A project site is served from https://<owner>.github.io/<repo>/, so the
+      # build needs both the origin and the subpath to emit correct links and
+      # absolute og:image URLs. configure-pages reports the real values, which
+      # also means this keeps working if a custom domain is added later.
+      - name: Build
+        working-directory: web
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

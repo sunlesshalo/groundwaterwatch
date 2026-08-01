@@ -25,6 +25,8 @@ concurrency:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,13 +61,28 @@ jobs:
           npm run build
 
       - name: Commit if anything changed
+        id: commit
         run: |
           git config user.name "groundwaterwatch-bot"
           git config user.email "actions@github.com"
           git add data/unl-latest.json web/public/maps
           if git diff --cached --quiet; then
             echo "no change — UNL has not published a new week"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "data: UNL operational map -> $(jq -r .week_start data/unl-latest.json)"
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+  # Called explicitly: a push made with GITHUB_TOKEN does not trigger the
+  # deploy workflow's own push event, so without this the site would keep
+  # serving the previous week.
+  deploy:
+    needs: mirror
+    if: needs.mirror.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
