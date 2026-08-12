@@ -1,0 +1,12 @@
+{
+  "week_start": "2026-08-10",
+  "layers": {
+    "gws": {
+      "name": "Groundwater storage percentile",
+      "url": "https://nasagrace.unl.edu/globaldata/20260810/GRACE_GWS_EU_20260810.png",
+      "file": "gws.png",
+      "bytes": 209195,
+      "sha256": "14a57b08d1ee8210a13c4847c0f11ef2267174498dae0fbc0c02871e78a70547"
+    }
+  }
+}
