@@ -1216,7 +1216,12 @@
     "2026-05-04",
     "2026-05-11",
     "2026-05-18",
-    "2026-05-25"
+    "2026-05-25",
+    "2026-06-01",
+    "2026-06-08",
+    "2026-06-15",
+    "2026-06-22",
+    "2026-06-29"
   ],
   "regions":[
     {
@@ -14601,6 +14606,61 @@
           }
         },
         "2026-05-25":{
+          "mean_percentile":0.4395604376260069,
+          "valid_cells":1,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.6593407004473536,
+          "valid_cells":1,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.8791208752520138,
+          "valid_cells":1,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":0.6593407004473536,
+          "valid_cells":1,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.6593407004473536,
+          "valid_cells":1,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
           "mean_percentile":0.4395604376260069,
           "valid_cells":1,
           "bands":{
@@ -28004,6 +28064,61 @@
             "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.8622826008007034,
+          "valid_cells":13,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":1.0143884853090557,
+          "valid_cells":13,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":0.9632310646015617,
+          "valid_cells":13,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":1.0313054846987173,
+          "valid_cells":13,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.8789598011359017,
+          "valid_cells":13,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -41390,6 +41505,61 @@
         },
         "2026-05-25":{
           "mean_percentile":1.0162774305442281,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.7329616832071295,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.7531372686389722,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.099838811375617,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.7850765752925756,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.7326173390613945,
           "valid_cells":21,
           "bands":{
             "d4_exceptional":1.0,
@@ -54792,6 +54962,61 @@
             "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.9436259376628716,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.7738764253337838,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":0.8473285605991846,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":0.9527654646785636,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.8863414315288385,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":0.9059837451495241,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":1.1579339943619589,
+          "valid_cells":21,
+          "bands":{
+            "d4_exceptional":0.9055309961934066,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -68178,6 +68403,61 @@
         },
         "2026-05-25":{
           "mean_percentile":1.005483381441932,
+          "valid_cells":26,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":1.2939999230715777,
+          "valid_cells":26,
+          "bands":{
+            "d4_exceptional":0.8841683750655858,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.8199152916065353,
+          "valid_cells":26,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.0128452402026236,
+          "valid_cells":26,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.6165257339385886,
+          "valid_cells":26,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.7855849205841545,
           "valid_cells":26,
           "bands":{
             "d4_exceptional":1.0,
@@ -81580,6 +81860,61 @@
             "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.9609879471451331,
+          "valid_cells":24,
+          "bands":{
+            "d4_exceptional":0.9586116149408909,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.9336104205652237,
+          "valid_cells":24,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.0896267819669003,
+          "valid_cells":24,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":1.2452444239294413,
+          "valid_cells":24,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":1.3185477152484812,
+          "valid_cells":24,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -94974,6 +95309,61 @@
             "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.7415410343188924,
+          "valid_cells":34,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":1.0731273493430613,
+          "valid_cells":34,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.0787226925644202,
+          "valid_cells":34,
+          "bands":{
+            "d4_exceptional":0.9708946344950719,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":1.054087680198428,
+          "valid_cells":34,
+          "bands":{
+            "d4_exceptional":0.9410879278675687,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.912096749646086,
+          "valid_cells":34,
+          "bands":{
+            "d4_exceptional":0.9704721498629503,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -108360,6 +108750,61 @@
         },
         "2026-05-25":{
           "mean_percentile":0.8725721801512749,
+          "valid_cells":32,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.6727229918529235,
+          "valid_cells":32,
+          "bands":{
+            "d4_exceptional":0.968907752497038,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":1.0713130100164336,
+          "valid_cells":32,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.091022895287976,
+          "valid_cells":32,
+          "bands":{
+            "d4_exceptional":0.9378154182409113,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.8167010599588426,
+          "valid_cells":32,
+          "bands":{
+            "d4_exceptional":0.968907752497038,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.6522535826237575,
           "valid_cells":32,
           "bands":{
             "d4_exceptional":1.0,
@@ -121762,6 +122207,61 @@
             "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":0.8029512024708427,
+          "valid_cells":64,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.947289495388768,
+          "valid_cells":64,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":0.7737254866153026,
+          "valid_cells":64,
+          "bands":{
+            "d4_exceptional":0.952800304272297,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.5534425193493335,
+          "valid_cells":64,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.5675827174459108,
+          "valid_cells":64,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -135156,6 +135656,61 @@
             "d1_moderate":0.9849271040810961,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":1.7442612232978194,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.8495406298369196,
+            "d3_extreme":0.9548487300539885,
+            "d2_severe":0.9699215437560501,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":2.3283755481191335,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.8347388850639786,
+            "d3_extreme":0.8645461079451232,
+            "d2_severe":0.9398431697289426,
+            "d1_moderate":0.9849271040810961,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":3.017808003612279,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.7448405231687883,
+            "d3_extreme":0.8495406298369196,
+            "d2_severe":0.9096973778911347,
+            "d1_moderate":0.9849271040810961,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":2.5336835003458864,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.7747163148964257,
+            "d3_extreme":0.834535151728716,
+            "d2_severe":0.9699215437560501,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":2.4693800636325474,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.7296999627886571,
+            "d3_extreme":0.834535151728716,
+            "d2_severe":0.9548487300539885,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -148546,6 +149101,61 @@
           "bands":{
             "d4_exceptional":1.0,
             "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":1.3651455960931127,
+          "valid_cells":69,
+          "bands":{
+            "d4_exceptional":0.9422967639344292,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":1.4847839444196906,
+          "valid_cells":69,
+          "bands":{
+            "d4_exceptional":0.8989533509517943,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.4556483918407255,
+          "valid_cells":69,
+          "bands":{
+            "d4_exceptional":0.8258057496014231,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":1.2382067006114994,
+          "valid_cells":69,
+          "bands":{
+            "d4_exceptional":0.8688087499298087,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":1.368442617388935,
+          "valid_cells":69,
+          "bands":{
+            "d4_exceptional":0.8831662976357288,
+            "d3_extreme":0.9853024459571548,
             "d2_severe":1.0,
             "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
@@ -161944,6 +162554,61 @@
             "d1_moderate":0.4750053960803679,
             "d0_abnormally_dry":0.698012104164725
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":16.652959049095656,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.07350061585919115,
+            "d3_extreme":0.19203871380036963,
+            "d2_severe":0.4002543318926303,
+            "d1_moderate":0.698012104164725,
+            "d0_abnormally_dry":0.7730241974364281
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":19.40921702974723,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.07350061585919115,
+            "d3_extreme":0.14772646491982938,
+            "d2_severe":0.19236673496994938,
+            "d1_moderate":0.5500189014104849,
+            "d0_abnormally_dry":0.7730241974364281
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":21.55942405768299,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.08842478227067868,
+            "d3_extreme":0.11800922154833415,
+            "d2_severe":0.14772646491982938,
+            "d1_moderate":0.4158341775425423,
+            "d0_abnormally_dry":0.699060497020355
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":20.793595871302575,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.10308506522297814,
+            "d3_extreme":0.11800922154833415,
+            "d2_severe":0.1626506212451854,
+            "d1_moderate":0.46034423563462545,
+            "d0_abnormally_dry":0.7728939653061282
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":18.23382928859287,
+          "valid_cells":67,
+          "bands":{
+            "d4_exceptional":0.0883583953529561,
+            "d3_extreme":0.10308506522297814,
+            "d2_severe":0.20702870230621415,
+            "d1_moderate":0.5943322799377565,
+            "d0_abnormally_dry":0.8787266944801829
+          }
         }
       }
     },
@@ -175338,6 +176003,61 @@
             "d1_moderate":0.3805496723003004,
             "d0_abnormally_dry":0.8830596726432918
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":17.49298153848792,
+          "valid_cells":60,
+          "bands":{
+            "d4_exceptional":0.016448102598820825,
+            "d3_extreme":0.09890628170884032,
+            "d2_severe":0.2807767790535152,
+            "d1_moderate":0.4802499924970631,
+            "d0_abnormally_dry":0.9665270763127282
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":18.973073746009153,
+          "valid_cells":60,
+          "bands":{
+            "d4_exceptional":0.016448102598820825,
+            "d3_extreme":0.04941686549449356,
+            "d2_severe":0.2147669900432455,
+            "d1_moderate":0.447137075798241,
+            "d0_abnormally_dry":0.8997961344869277
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":19.783939713545017,
+          "valid_cells":60,
+          "bands":{
+            "d4_exceptional":0.016448102598820825,
+            "d3_extreme":0.016448102598820825,
+            "d2_severe":0.19846212571063532,
+            "d1_moderate":0.38083545380620415,
+            "d0_abnormally_dry":0.8663948459825703
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":17.20877457747747,
+          "valid_cells":60,
+          "bands":{
+            "d4_exceptional":0.016448102598820825,
+            "d3_extreme":0.08260266786570744,
+            "d2_severe":0.2812092697713105,
+            "d1_moderate":0.6489697842441184,
+            "d0_abnormally_dry":0.9497906144690922
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":15.409624624495875,
+          "valid_cells":60,
+          "bands":{
+            "d4_exceptional":0.016448102598820825,
+            "d3_extreme":0.11629290876000034,
+            "d2_severe":0.2812092697713105,
+            "d1_moderate":0.7161288400745435,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -188730,6 +189450,61 @@
             "d3_extreme":0.0,
             "d2_severe":0.0,
             "d1_moderate":0.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":20.958849859038253,
+          "valid_cells":3,
+          "bands":{
+            "d4_exceptional":0.0,
+            "d3_extreme":0.0,
+            "d2_severe":0.0,
+            "d1_moderate":0.33238117347870433,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":21.102571160072863,
+          "valid_cells":3,
+          "bands":{
+            "d4_exceptional":0.0,
+            "d3_extreme":0.0,
+            "d2_severe":0.0,
+            "d1_moderate":0.33238117347870433,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":21.93162754031773,
+          "valid_cells":3,
+          "bands":{
+            "d4_exceptional":0.0,
+            "d3_extreme":0.0,
+            "d2_severe":0.0,
+            "d1_moderate":0.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":20.80821631058794,
+          "valid_cells":3,
+          "bands":{
+            "d4_exceptional":0.0,
+            "d3_extreme":0.0,
+            "d2_severe":0.0,
+            "d1_moderate":0.33380941326064784,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":18.264144052661347,
+          "valid_cells":3,
+          "bands":{
+            "d4_exceptional":0.0,
+            "d3_extreme":0.0,
+            "d2_severe":0.0,
+            "d1_moderate":1.0,
             "d0_abnormally_dry":1.0
           }
         }
@@ -202126,6 +202901,61 @@
             "d1_moderate":0.9618220325970654,
             "d0_abnormally_dry":1.0
           }
+        },
+        "2026-06-01":{
+          "mean_percentile":5.847478851021325,
+          "valid_cells":53,
+          "bands":{
+            "d4_exceptional":0.3941546954450094,
+            "d3_extreme":0.5069900425242361,
+            "d2_severe":0.8099146646387784,
+            "d1_moderate":0.9618220325970654,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":5.929127889498405,
+          "valid_cells":53,
+          "bands":{
+            "d4_exceptional":0.394236039613322,
+            "d3_extreme":0.4883059866075325,
+            "d2_severe":0.8104790482070644,
+            "d1_moderate":0.9618220325970654,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":5.170537379627804,
+          "valid_cells":53,
+          "bands":{
+            "d4_exceptional":0.4517498517066264,
+            "d3_extreme":0.60259906361018,
+            "d2_severe":0.8482542596968512,
+            "d1_moderate":0.9618220325970654,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":3.8174496449040416,
+          "valid_cells":53,
+          "bands":{
+            "d4_exceptional":0.5648277917944872,
+            "d3_extreme":0.6972355407899713,
+            "d2_severe":0.9618220325970654,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":3.5688675235087426,
+          "valid_cells":53,
+          "bands":{
+            "d4_exceptional":0.5080478955271163,
+            "d3_extreme":0.7540194272400785,
+            "d2_severe":0.9618220325970654,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
         }
       }
     },
@@ -215515,6 +216345,61 @@
           "valid_cells":61,
           "bands":{
             "d4_exceptional":0.9014471150882455,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-01":{
+          "mean_percentile":1.0542574077870468,
+          "valid_cells":61,
+          "bands":{
+            "d4_exceptional":0.9669280245088834,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-08":{
+          "mean_percentile":0.7586467787648934,
+          "valid_cells":61,
+          "bands":{
+            "d4_exceptional":0.9835735037123159,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-15":{
+          "mean_percentile":1.319216073417696,
+          "valid_cells":61,
+          "bands":{
+            "d4_exceptional":0.9837206272588214,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-22":{
+          "mean_percentile":0.6821784194666135,
+          "valid_cells":61,
+          "bands":{
+            "d4_exceptional":1.0,
+            "d3_extreme":1.0,
+            "d2_severe":1.0,
+            "d1_moderate":1.0,
+            "d0_abnormally_dry":1.0
+          }
+        },
+        "2026-06-29":{
+          "mean_percentile":0.6158356456161126,
+          "valid_cells":61,
+          "bands":{
+            "d4_exceptional":1.0,
             "d3_extreme":1.0,
             "d2_severe":1.0,
             "d1_moderate":1.0,
