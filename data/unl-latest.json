@@ -1,8 +1,8 @@
 {
-  "week_start": "2026-09-14",
-  "fetched_at": "2026-09-16T11:51:06Z",
+  "week_start": "2026-09-21",
+  "fetched_at": "2026-09-23T11:52:51Z",
   "source": "nasagrace.unl.edu",
   "layers": {
-    "gws": "https://nasagrace.unl.edu/globaldata/20260914/GRACE_GWS_EU_20260914.png"
+    "gws": "https://nasagrace.unl.edu/globaldata/20260921/GRACE_GWS_EU_20260921.png"
   }
 }
